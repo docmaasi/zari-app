@@ -22,22 +22,27 @@ import { MobileNav } from "@/components/landing/mobile-nav";
 import { PwaInstallButton } from "@/components/pwa-install";
 import { WhyZari } from "@/components/landing/why-zari";
 import { TrialChat } from "@/components/landing/trial-chat";
+import { MatrixRain } from "@/components/chat/matrix-rain";
+import { ZariOrb } from "@/components/chat/zari-orb";
 
 export default function LandingPage() {
   const [showTrial, setShowTrial] = useState(false);
 
   return (
-    <div className="min-h-screen bg-zari-bg overflow-x-hidden">
+    <div className="min-h-screen bg-[#06060e] overflow-x-hidden font-mono relative">
+      {/* Matrix Rain Background */}
+      <div className="fixed inset-0 z-0">
+        <MatrixRain color="#7c5cfc" opacity={0.04} speed={0.8} />
+      </div>
+
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-zari-bg/80 backdrop-blur-xl border-b border-white/5">
+      <nav className="fixed top-0 w-full z-50 bg-black/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zari-accent to-zari-pink flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-zari-text">Zari</span>
+          <div className="flex items-center gap-3">
+            <ZariOrb emotion="idle" gender="neutral" size={32} />
+            <span className="text-lg font-bold text-zari-text tracking-wider">Zari</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-zari-muted">
+          <div className="hidden lg:flex items-center gap-8 text-sm text-zari-muted tracking-wide">
             <a
               href="#features"
               className="hover:text-zari-text transition-colors"
@@ -63,7 +68,7 @@ export default function LandingPage() {
               Testimonials
             </a>
           </div>
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             <PwaInstallButton variant="header" />
             <SignedOut>
               <Link
@@ -93,26 +98,16 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-28 pb-16 px-6 relative">
-        {/* Background gradient blobs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-zari-accent/10 rounded-full blur-[128px] pointer-events-none" />
-        <div className="absolute top-20 right-1/4 w-72 h-72 bg-zari-pink/10 rounded-full blur-[128px] pointer-events-none" />
-
+      <section className="relative z-10 pt-28 pb-16 px-6">
         <div className="max-w-5xl mx-auto text-center relative">
-          {/* Glowing orb */}
+          {/* Zari Orb */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2 }}
-            className="w-40 h-40 mx-auto mb-8 rounded-full bg-gradient-to-br from-zari-accent via-zari-pink to-zari-blue blur-2xl opacity-50"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="w-28 h-28 mx-auto -mt-[10.5rem] mb-12 rounded-full bg-gradient-to-br from-zari-accent via-zari-pink to-zari-blue flex items-center justify-center shadow-2xl shadow-zari-accent/30"
+            transition={{ duration: 1 }}
+            className="flex justify-center mb-10"
           >
-            <Sparkles className="w-12 h-12 text-white" />
+            <ZariOrb emotion="idle" gender="neutral" size={120} />
           </motion.div>
 
           <motion.div
@@ -129,7 +124,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight tracking-tight"
           >
             <span className="bg-gradient-to-r from-zari-accent via-zari-pink to-zari-blue bg-clip-text text-transparent">
               Meet Zari
@@ -211,14 +206,14 @@ export default function LandingPage() {
       </section>
 
       {/* Social Proof Stats */}
-      <section className="py-16 px-6">
+      <section className="relative z-10 py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <SocialProof />
         </div>
       </section>
 
       {/* Demo Chat */}
-      <section id="demo" className="py-20 px-6 bg-zari-surface/20">
+      <section id="demo" className="py-20 px-6 bg-black/20">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -242,14 +237,14 @@ export default function LandingPage() {
       </section>
 
       {/* Why Zari */}
-      <section className="py-20 px-6">
+      <section className="relative z-10 py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <WhyZari />
         </div>
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-6">
+      <section id="how-it-works" className="relative z-10 py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -273,7 +268,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20 px-6 bg-zari-surface/30">
+      <section id="features" className="py-20 px-6 bg-black/30">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -297,7 +292,7 @@ export default function LandingPage() {
       </section>
 
       {/* Personality Modes */}
-      <section className="py-20 px-6">
+      <section className="relative z-10 py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -393,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* Languages */}
-      <section id="languages" className="py-20 px-6 bg-zari-surface/20">
+      <section id="languages" className="py-20 px-6 bg-black/20">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -417,7 +412,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-6">
+      <section id="testimonials" className="relative z-10 py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -440,7 +435,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-6">
+      <section className="relative z-10 py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -492,7 +487,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-6 border-t border-white/5">
+      <footer className="relative z-10 py-16 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             {/* Brand */}
