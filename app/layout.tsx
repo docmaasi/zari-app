@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Zari — Your AI Companion",
   description:
     "An AI companion that thinks, speaks, learns, and remembers. Available in 16 languages.",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",
     apple: "/icon.svg",
