@@ -9,10 +9,12 @@ import { ZariOrb } from "@/components/chat/zari-orb";
 import { MatrixRain } from "@/components/chat/matrix-rain";
 
 const navLinks = [
+  { href: "#demo", label: "Demo" },
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How It Works" },
   { href: "#languages", label: "Languages" },
   { href: "#testimonials", label: "Testimonials" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function MobileNav() {
@@ -22,9 +24,10 @@ export function MobileNav() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden p-2 rounded-lg text-zari-muted hover:text-zari-text"
+        className="lg:hidden p-2 rounded-lg text-zari-muted hover:text-zari-text relative z-50"
+        aria-label="Open menu"
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="w-6 h-6" />
       </button>
 
       <AnimatePresence>

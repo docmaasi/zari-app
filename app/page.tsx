@@ -22,6 +22,7 @@ import { MobileNav } from "@/components/landing/mobile-nav";
 import { PwaInstallButton } from "@/components/pwa-install";
 import { WhyZari } from "@/components/landing/why-zari";
 import { TrialChat } from "@/components/landing/trial-chat";
+import { BackToTop } from "@/components/landing/back-to-top";
 import { MatrixRain } from "@/components/chat/matrix-rain";
 import { ZariOrb } from "@/components/chat/zari-orb";
 
@@ -100,37 +101,12 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative z-10 pt-28 pb-16 px-6">
         <div className="max-w-5xl mx-auto text-center relative">
-          {/* Zari Orb — HD image */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
-            className="flex justify-center mb-10"
-          >
-            <img
-              src="/zari-orb-hero.png"
-              alt="Zari"
-              width={200}
-              height={200}
-              className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] drop-shadow-[0_0_40px_rgba(124,92,252,0.4)]"
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-zari-accent/10 border border-zari-accent/20 text-xs text-zari-accent-light mb-6"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            Now with Google & Apple Sign-In
-          </motion.div>
-
+          {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight tracking-tight"
+            transition={{ delay: 0.2 }}
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 leading-tight tracking-tight"
           >
             <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#38b2ff] bg-clip-text text-transparent">
               Meet Zari
@@ -140,8 +116,8 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl md:text-2xl text-zari-text max-w-2xl mx-auto mb-3"
+            transition={{ delay: 0.3 }}
+            className="text-xl md:text-2xl text-zari-text max-w-2xl mx-auto mb-2"
           >
             Your AI that actually understands you.
           </motion.p>
@@ -149,18 +125,37 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-base text-zari-muted/70 max-w-xl mx-auto mb-6"
+            transition={{ delay: 0.4 }}
+            className="text-base text-zari-muted/70 max-w-xl mx-auto mb-8"
           >
             Zari listens, remembers, and evolves with you.
           </motion.p>
+
+          {/* Orb with glow burst background */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="relative flex justify-center mb-6"
+          >
+            {/* Glow burst behind orb */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-gradient-to-r from-transparent via-zari-accent/20 to-transparent blur-[60px] pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[400px] bg-gradient-to-b from-transparent via-[#4f8bff]/15 to-transparent blur-[60px] pointer-events-none" />
+            <img
+              src="/zari-orb-hero.png"
+              alt="Zari"
+              width={220}
+              height={220}
+              className="relative z-10 w-[180px] h-[180px] md:w-[220px] md:h-[220px] drop-shadow-[0_0_60px_rgba(124,92,252,0.5)]"
+            />
+          </motion.div>
 
           {/* "I remember what matters" bubble */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-10 backdrop-blur-sm"
+            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-8 backdrop-blur-sm"
           >
             I remember what matters.
           </motion.div>
@@ -569,6 +564,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Back to top */}
+      <BackToTop />
 
       {/* PWA Install Banner (floating) */}
       <PwaInstallButton variant="banner" />
