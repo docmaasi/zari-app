@@ -7,6 +7,27 @@
 @layer base {
   body {
     @apply bg-zari-bg text-zari-text font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* Mobile safe area padding */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Fix 100vh on mobile (address bar issue) */
+  .h-screen-safe {
+    height: 100dvh;
   }
 }
 

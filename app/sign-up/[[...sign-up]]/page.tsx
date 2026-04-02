@@ -2,16 +2,14 @@
 
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { ZariOrb } from "@/components/chat/zari-orb";
 
 export default function SignUpPage() {
   return (
     <div className="min-h-screen bg-zari-bg flex flex-col items-center justify-center px-4">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-zari-accent to-zari-pink flex items-center justify-center">
-          <Sparkles className="w-5 h-5 text-white" />
-        </div>
+      <Link href="/" className="flex items-center gap-3 mb-8">
+        <ZariOrb emotion="idle" gender="neutral" size={40} />
         <span className="text-xl font-bold text-zari-text">Zari</span>
       </Link>
 

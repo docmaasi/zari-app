@@ -7,7 +7,13 @@
   "background_color": "#0a0a14",
   "theme_color": "#7c5cfc",
   "orientation": "portrait",
+  "categories": ["lifestyle", "social", "health"],
   "icons": [
+    {
+      "src": "/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -19,6 +25,24 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Chat with Zari",
+      "url": "/chat",
+      "description": "Start a conversation with Zari"
+    },
+    {
+      "name": "Memories",
+      "url": "/memories",
+      "description": "See what Zari remembers about you"
+    },
+    {
+      "name": "Zari's Journal",
+      "url": "/journal",
+      "description": "Read Zari's thoughts about you"
     }
   ]
 }

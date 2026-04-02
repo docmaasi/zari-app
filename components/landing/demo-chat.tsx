@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Volume2, VolumeX, RotateCcw, Sparkles, Heart, Zap } from "lucide-react";
+import { ZariOrb } from "@/components/chat/zari-orb";
 
 interface DemoLine {
   text: string;
@@ -271,8 +272,14 @@ export function DemoChat() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
+          <ZariOrb
+            emotion={isSpeaking ? "speaking" : "idle"}
+            gender={currentLine?.gender || "neutral"}
+            size={40}
+          />
+          {/* Legacy div kept hidden for reference */}
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            className={`hidden w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               isSpeaking
                 ? currentLine?.gender === "female"
                   ? "bg-gradient-to-br from-pink-500 to-rose-500 animate-pulse"

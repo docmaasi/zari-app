@@ -11,8 +11,12 @@ export const metadata: Metadata = {
     "An AI companion that thinks, speaks, learns, and remembers. Available in 16 languages.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/icon-180.png",
+    shortcut: "/favicon.png",
   },
   appleWebApp: {
     capable: true,

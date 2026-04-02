@@ -16,15 +16,36 @@ import {
   Share2,
   Mic,
   MicOff,
+  MessageSquare,
+  Plus,
+  Headphones,
+  FileDown,
+  Music,
 } from "lucide-react";
 import { getLanguage } from "@/lib/languages";
-import { speakSmooth as speak, stopSmooth as stopSpeaking } from "@/lib/tts-enhanced";
+import { speakSmooth as speakBrowser, stopSmooth as stopBrowser } from "@/lib/tts-enhanced";
+import { speakElevenLabs, stopElevenLabs } from "@/lib/tts-elevenlabs";
+import { useSubscription } from "@/lib/use-subscription";
+import { getDefaultVoiceId } from "@/lib/elevenlabs-voices";
 import { getTheme } from "@/lib/themes";
+import { getStarters } from "@/lib/conversation-starters";
 import { MemoryPanel } from "./memory-panel";
 import { SettingsPanel } from "./settings-panel";
+import { HistoryPanel } from "./history-panel";
+import { UpgradePrompt } from "./upgrade-prompt";
+import { PushPermission } from "./push-permission";
+import { StreakBadge } from "./streak-badge";
+import { Milestones } from "./milestones";
+import { ConnectionStatus } from "./connection-status";
+import { BreathingExercise } from "./breathing-exercise";
+import { VibeSelector } from "./vibe-selector";
+import { AmbientSounds } from "./ambient-sounds";
+import { ShareCard } from "./share-card";
+import { exportAsPDF } from "@/lib/export-conversation";
 import { MatrixRain } from "./matrix-rain";
 import { ZariOrb } from "./zari-orb";
 import { PwaInstallButton } from "@/components/pwa-install";
+import { MoodPicker } from "./mood-picker";
 import {
   isVoiceInputSupported,
   startListening,
@@ -38,6 +59,8 @@ interface ChatInterfaceProps {
     gender?: string;
     language?: string;
     voiceEnabled?: boolean;
+    voiceId?: string;
+    namePronunciation?: string;
     mood?: string;
   };
 }
@@ -90,12 +113,51 @@ function getOrbEmotion(status: Status, gender: string) {
 export function ChatInterface({ user }: ChatInterfaceProps) {
   const lang = getLanguage(user.language || "en");
   const gender = user.gender || "neutral";
+  const { isPlusUser } = useSubscription();
+  const elevenLabsVoiceId = user.voiceId || getDefaultVoiceId(gender);
+
+  // Swap display name with pronunciation for TTS
+  const prepareForSpeech = useCallback(
+    (text: string): string => {
+      if (!user.namePronunciation || !user.name) return text;
+      // Replace all occurrences of the display name with pronunciation
+      return text.replace(
+        new RegExp(user.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
+        user.namePronunciation
+      );
+    },
+    [user.name, user.namePronunciation]
+  );
+
+  // Smart speak: ElevenLabs for Plus, browser TTS for free
+  const speak = useCallback(
+    async (text: string, onEnd?: () => void) => {
+      const speechText = prepareForSpeech(text);
+      if (isPlusUser) {
+        const success = await speakElevenLabs(speechText, elevenLabsVoiceId, onEnd);
+        if (!success) {
+          speakBrowser(speechText, user.language || "en", gender, onEnd);
+        }
+      } else {
+        speakBrowser(speechText, user.language || "en", gender, onEnd);
+      }
+    },
+    [isPlusUser, elevenLabsVoiceId, user.language, gender, prepareForSpeech]
+  );
+
+  const stopSpeaking = useCallback(() => {
+    stopElevenLabs();
+    stopBrowser();
+  }, []);
 
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<Status>("online");
   const [voiceOn, setVoiceOn] = useState(user.voiceEnabled ?? true);
   const [showMemory, setShowMemory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedConvId, setSelectedConvId] = useState<Id<"conversations"> | null>(null);
+  const [isNewChat, setIsNewChat] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [hasMic] = useState(() => isVoiceInputSupported());
   const [themeId] = useState(() => {
@@ -107,6 +169,17 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [localMessages, setLocalMessages] = useState<
     Array<{ role: string; content: string; id: string }>
   >([]);
+  const [checkInMessage, setCheckInMessage] = useState<string | null>(null);
+  const [checkInLoading, setCheckInLoading] = useState(false);
+  const [currentMood, setCurrentMood] = useState(user.mood || "");
+  const [upgradePrompt, setUpgradePrompt] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [showBreathing, setShowBreathing] = useState(false);
+  const [sessionVibe, setSessionVibe] = useState("");
+  const [showAmbient, setShowAmbient] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -114,12 +187,15 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
 
   const createConversation = useMutation(api.messages.createConversation);
   const sendMessageMutation = useMutation(api.messages.sendMessage);
-  const conversation = useQuery(api.messages.getActiveConversation, {
+  const recordActivity = useMutation(api.streaks.recordActivity);
+  const latestConversation = useQuery(api.messages.getActiveConversation, {
     userId: user._id,
   });
+  // Use selected conversation, fall back to latest (unless starting new chat)
+  const activeConvId = isNewChat ? null : (selectedConvId || latestConversation?._id);
   const messages = useQuery(
     api.messages.getRecentMessages,
-    conversation ? { conversationId: conversation._id } : "skip"
+    activeConvId ? { conversationId: activeConvId } : "skip"
   );
   const memoryCount = useQuery(api.memories.getCount, { userId: user._id });
 
@@ -130,6 +206,28 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, localMessages, scrollToBottom]);
+
+  // Proactive message: Zari initiates when user opens chat
+  useEffect(() => {
+    const sessionKey = `zari-proactive-${new Date().toDateString()}`;
+    const already = sessionStorage.getItem(sessionKey);
+    if (already) {
+      setCheckInMessage(already);
+      return;
+    }
+
+    setCheckInLoading(true);
+    fetch("/api/proactive", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.message) {
+          setCheckInMessage(data.message);
+          sessionStorage.setItem(sessionKey, data.message);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCheckInLoading(false));
+  }, []);
 
   const getThinkingPhrase = () => {
     const phrases = thinkingPhrases[lang.code] || thinkingPhrases.default;
@@ -143,12 +241,14 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     setInput("");
     stopSpeaking();
 
-    let convId = conversation?._id;
+    let convId = activeConvId;
     if (!convId) {
       convId = await createConversation({
         userId: user._id,
         title: text.slice(0, 50),
       });
+      setSelectedConvId(convId);
+      setIsNewChat(false);
     }
 
     await sendMessageMutation({
@@ -158,6 +258,9 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       content: text,
     });
 
+    // Track streak
+    recordActivity({ userId: user._id }).catch(() => {});
+
     const tempId = `temp-${Date.now()}`;
     setLocalMessages((prev) => [
       ...prev,
@@ -165,25 +268,71 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     ]);
 
     setStatus("thinking");
+    const replyId = `reply-${Date.now()}`;
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, conversationId: convId }),
+        body: JSON.stringify({ message: text, conversationId: convId, vibe: sessionVibe }),
       });
 
-      const data = await res.json();
-      const reply = data.reply || "Sorry, I couldn't respond.";
+      // Handle non-stream error responses (e.g. daily limit)
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data.error === "daily_limit") {
+          setUpgradePrompt({
+            title: "Daily limit reached",
+            message: "You've used your 5 free messages today. Upgrade to Plus for unlimited conversations with Zari.",
+          });
+        }
+        const errorMsg = data.message || data.reply || "Sorry, I couldn't respond.";
+        setLocalMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: errorMsg, id: replyId },
+        ]);
+        setStatus("online");
+        return;
+      }
 
+      // Stream the response
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No reader");
+      const decoder = new TextDecoder();
+      let fullReply = "";
+
+      // Add empty reply message that we'll update as chunks arrive
       setLocalMessages((prev) => [
         ...prev,
-        { role: "assistant", content: reply, id: `reply-${Date.now()}` },
+        { role: "assistant", content: "", id: replyId },
       ]);
 
-      if (voiceOn) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
+
+        for (const line of lines) {
+          const json = JSON.parse(line.slice(6));
+          if (json.text) {
+            fullReply += json.text;
+            const current = fullReply;
+            setLocalMessages((prev) =>
+              prev.map((m) =>
+                m.id === replyId ? { ...m, content: current } : m
+              )
+            );
+          }
+          if (json.done) break;
+        }
+      }
+
+      if (voiceOn && fullReply) {
         setStatus("speaking");
-        speak(reply, user.language || "en", gender, () => setStatus("online"));
+        speak(fullReply, () => setStatus("online"));
       } else {
         setStatus("online");
       }
@@ -195,10 +344,20 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       }).catch(() => {});
     } catch {
       setStatus("online");
-      setLocalMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Sorry, something went wrong. Please try again.", id: `error-${Date.now()}` },
-      ]);
+      setLocalMessages((prev) => {
+        const hasReply = prev.some((m) => m.id === replyId);
+        if (hasReply) {
+          return prev.map((m) =>
+            m.id === replyId && !m.content
+              ? { ...m, content: "Sorry, something went wrong. Please try again." }
+              : m
+          );
+        }
+        return [
+          ...prev,
+          { role: "assistant", content: "Sorry, something went wrong. Please try again.", id: replyId },
+        ];
+      });
     }
   };
 
@@ -218,12 +377,26 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     ),
   ];
 
-  const quickActions = [
-    "How are you, Zari?",
-    "Help me think through something",
-    "I need advice",
-    "Tell me something interesting",
-  ];
+  const [quickActions] = useState(() =>
+    getStarters(user.language || "en", gender)
+  );
+
+  const handleNewConversation = () => {
+    setSelectedConvId(null);
+    setIsNewChat(true);
+    setLocalMessages([]);
+    setCheckInMessage(null);
+    stopSpeaking();
+    setStatus("online");
+  };
+
+  const handleSelectConversation = (convId: Id<"conversations">) => {
+    setSelectedConvId(convId);
+    setIsNewChat(false);
+    setLocalMessages([]);
+    stopSpeaking();
+    setStatus("online");
+  };
 
   const statusText =
     status === "online" ? lang.ui.online
@@ -234,7 +407,10 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const orbEmotion = getOrbEmotion(status, gender);
 
   return (
-    <div className={`h-screen flex flex-col relative overflow-hidden ${theme.bgClass} ${theme.fontClass}`}>
+    <div className={`h-screen-safe flex flex-col relative overflow-hidden ${theme.bgClass} ${theme.fontClass}`}>
+      {/* Connection status */}
+      <ConnectionStatus />
+
       {/* Matrix Rain Background */}
       <MatrixRain
         color={theme.matrixColor}
@@ -247,9 +423,12 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         <div className="flex items-center gap-3">
           <ZariOrb emotion={orbEmotion} gender={gender} size={40} />
           <div>
-            <h1 className="text-sm font-semibold text-zari-text tracking-wide">
-              Zari
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-semibold text-zari-text tracking-wide">
+                Zari
+              </h1>
+              <StreakBadge userId={user._id} />
+            </div>
             <p className="text-xs text-zari-muted font-light tracking-wider">
               {statusText}
             </p>
@@ -257,6 +436,27 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setShowHistory(true)}
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            title="Conversation history"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleNewConversation}
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            title="New conversation"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowAmbient(!showAmbient)}
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            title="Ambient sounds"
+          >
+            <Music className="w-4 h-4" />
+          </button>
           <button
             onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}
             className={`p-2 rounded-xl transition-colors ${
@@ -289,6 +489,15 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
           >
             <Share2 className="w-4 h-4" />
           </button>
+          {isPlusUser && allMessages.length > 0 && (
+            <button
+              onClick={() => exportAsPDF(allMessages, "Zari Chat", user.name)}
+              className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+              title="Export conversation"
+            >
+              <FileDown className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => setShowSettings(true)}
             className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
@@ -319,9 +528,61 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             <h2 className="text-xl font-semibold text-zari-text mb-2 mt-6 tracking-wide">
               {lang.ui.talkTo}
             </h2>
-            <p className="text-sm text-zari-muted mb-8 tracking-wider font-light">
-              {lang.ui.howFeeling}
-            </p>
+            {checkInMessage ? (
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-zari-text/80 mb-8 max-w-md leading-relaxed tracking-wide"
+              >
+                {checkInMessage}
+              </motion.p>
+            ) : checkInLoading ? (
+              <p className="text-sm text-zari-muted mb-8 tracking-wider font-light animate-pulse">
+                ...
+              </p>
+            ) : (
+              <p className="text-sm text-zari-muted mb-8 tracking-wider font-light">
+                {lang.ui.howFeeling}
+              </p>
+            )}
+            {/* Headphone hint */}
+            {voiceOn && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl bg-zari-accent/5 border border-zari-accent/10 max-w-xs"
+              >
+                <Headphones className="w-4 h-4 text-zari-accent/60" />
+                <span className="text-[11px] text-zari-muted/70 tracking-wide">
+                  Put your headphones in for the full experience
+                </span>
+              </motion.div>
+            )}
+
+            {/* Mood Picker */}
+            <div className="mb-6 max-w-md">
+              <p className="text-xs text-zari-muted/60 mb-3 tracking-widest uppercase">
+                How are you feeling?
+              </p>
+              <MoodPicker
+                userId={user._id}
+                currentMood={currentMood}
+                onSelect={setCurrentMood}
+              />
+            </div>
+
+            {/* Vibe selector */}
+            <div className="mb-6 max-w-md">
+              <p className="text-xs text-zari-muted/60 mb-3 tracking-widest uppercase">
+                Set the vibe
+              </p>
+              <VibeSelector
+                currentVibe={sessionVibe}
+                onSelect={setSessionVibe}
+              />
+            </div>
+
             <div className="flex flex-wrap gap-2 justify-center max-w-md">
               {quickActions.map((action) => (
                 <button
@@ -353,18 +614,26 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
               <p className="text-sm leading-relaxed whitespace-pre-wrap tracking-wide">
                 {msg.content}
               </p>
-              {msg.role === "assistant" && (() => {
-                const disclosure = getDisclosure(msg.content);
-                if (!disclosure) return null;
-                return (
-                  <div className="mt-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-sans ${disclosure.color}`}>
-                      <Shield className="w-3 h-3" />
-                      {disclosure.label}
-                    </span>
-                  </div>
-                );
-              })()}
+              {msg.role === "assistant" && (
+                <div className="flex items-center gap-2 mt-2">
+                  {(() => {
+                    const disclosure = getDisclosure(msg.content);
+                    if (!disclosure) return null;
+                    return (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-sans ${disclosure.color}`}>
+                        <Shield className="w-3 h-3" />
+                        {disclosure.label}
+                      </span>
+                    );
+                  })()}
+                  <button
+                    onClick={() => setShareMessage(msg.content)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-zari-muted/30 hover:text-zari-muted transition-colors"
+                  >
+                    <Share2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         ))}
@@ -397,8 +666,19 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         </motion.div>
       )}
 
+      {/* Upgrade Prompt */}
+      <AnimatePresence>
+        {upgradePrompt && (
+          <UpgradePrompt
+            title={upgradePrompt.title}
+            message={upgradePrompt.message}
+            onDismiss={() => setUpgradePrompt(null)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Input */}
-      <div className="relative z-10 px-4 pb-4 pt-2">
+      <div className="relative z-10 px-4 pb-4 pt-2 safe-bottom">
         {/* Listening indicator */}
         <AnimatePresence>
           {isListening && (
@@ -480,8 +760,22 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         </div>
       </div>
 
+      {/* Milestones */}
+      <Milestones userId={user._id} />
+
+      {/* Push notification prompt */}
+      <PushPermission userId={user._id} />
+
       {/* Panels */}
       <AnimatePresence>
+        {showHistory && (
+          <HistoryPanel
+            userId={user._id}
+            activeConversationId={activeConvId ?? undefined}
+            onSelect={handleSelectConversation}
+            onClose={() => setShowHistory(false)}
+          />
+        )}
         {showMemory && (
           <MemoryPanel userId={user._id} onClose={() => setShowMemory(false)} />
         )}
@@ -489,9 +783,32 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
           <SettingsPanel
             userId={user._id}
             currentName={user.name}
+            currentNamePronunciation={user.namePronunciation}
             currentGender={gender}
             currentLanguage={user.language || "en"}
+            currentVoiceId={user.voiceId}
             onClose={() => setShowSettings(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Ambient sounds */}
+      <AmbientSounds show={showAmbient} onClose={() => setShowAmbient(false)} />
+
+      {/* Breathing exercise */}
+      <AnimatePresence>
+        {showBreathing && (
+          <BreathingExercise onClose={() => setShowBreathing(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Share card modal */}
+      <AnimatePresence>
+        {shareMessage && (
+          <ShareCard
+            message={shareMessage}
+            userName={user.name}
+            onClose={() => setShareMessage(null)}
           />
         )}
       </AnimatePresence>

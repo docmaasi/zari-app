@@ -55,6 +55,7 @@ export default function LandingPage() {
             <a href="#how-it-works" className="hover:text-zari-text transition-colors">How It Works</a>
             <a href="#languages" className="hover:text-zari-text transition-colors">Languages</a>
             <a href="#testimonials" className="hover:text-zari-text transition-colors">Testimonials</a>
+            <Link href="/pricing" className="hover:text-zari-text transition-colors text-zari-accent">Pricing</Link>
           </div>
 
           {/* Right — CTA + actions */}
@@ -99,14 +100,20 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative z-10 pt-28 pb-16 px-6">
         <div className="max-w-5xl mx-auto text-center relative">
-          {/* Zari Orb */}
+          {/* Zari Orb — HD image */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1 }}
             className="flex justify-center mb-10"
           >
-            <ZariOrb emotion="idle" gender="neutral" size={120} />
+            <img
+              src="/zari-orb-hero.png"
+              alt="Zari"
+              width={200}
+              height={200}
+              className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] drop-shadow-[0_0_40px_rgba(124,92,252,0.4)]"
+            />
           </motion.div>
 
           <motion.div
@@ -125,7 +132,7 @@ export default function LandingPage() {
             transition={{ delay: 0.3 }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight tracking-tight"
           >
-            <span className="bg-gradient-to-r from-zari-accent via-zari-pink to-zari-blue bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#38b2ff] bg-clip-text text-transparent">
               Meet Zari
             </span>
           </motion.h1>
@@ -134,20 +141,29 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-xl md:text-2xl text-zari-muted max-w-2xl mx-auto mb-3"
+            className="text-xl md:text-2xl text-zari-text max-w-2xl mx-auto mb-3"
           >
-            An AI companion that thinks, speaks, learns, and remembers.
+            Your AI that actually understands you.
           </motion.p>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="text-base text-zari-muted/60 max-w-xl mx-auto mb-10"
+            className="text-base text-zari-muted/70 max-w-xl mx-auto mb-6"
           >
-            Choose her personality. Pick your language. Start talking. Zari
-            remembers every detail and grows with you over time.
+            Zari listens, remembers, and evolves with you.
           </motion.p>
+
+          {/* "I remember what matters" bubble */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-10 backdrop-blur-sm"
+          >
+            I remember what matters.
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -454,8 +470,8 @@ export default function LandingPage() {
                 Ready to Meet Zari?
               </h2>
               <p className="text-lg text-zari-muted mb-8 max-w-md mx-auto">
-                Start a conversation that actually understands you. Free
-                forever. No credit card required.
+                Start a conversation that actually understands you. Try free
+                or upgrade to Plus for unlimited access.
               </p>
               <SignedOut>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -492,9 +508,7 @@ export default function LandingPage() {
             {/* Brand */}
             <div className="md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zari-accent to-zari-pink flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
+                <ZariOrb emotion="idle" gender="neutral" size={32} />
                 <span className="text-lg font-bold text-zari-text">Zari</span>
               </div>
               <p className="text-xs text-zari-muted leading-relaxed">
@@ -513,6 +527,7 @@ export default function LandingPage() {
                 <a href="#how-it-works" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">How It Works</a>
                 <a href="#languages" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Languages</a>
                 <a href="#testimonials" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Testimonials</a>
+                <Link href="/pricing" className="block text-xs text-zari-accent hover:text-zari-text transition-colors">Pricing</Link>
               </div>
             </div>
 

@@ -77,6 +77,9 @@ export default function ChatPage() {
           gender: convexUser.gender,
           language: convexUser.language,
           voiceEnabled: convexUser.voiceEnabled,
+          voiceId: convexUser.voiceId,
+          namePronunciation: convexUser.namePronunciation,
+          mood: convexUser.mood,
         }}
       />
     </>

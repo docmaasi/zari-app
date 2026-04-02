@@ -12,77 +12,37 @@ interface ZariOrbProps {
 
 const emotionConfig: Record<
   Emotion,
-  { colors: string[]; scale: number; blur: string; speed: number }
+  { scale: number; speed: number; ringOpacity: number }
 > = {
-  idle: {
-    colors: ["#7c5cfc", "#a78bfa", "#7c5cfc"],
-    scale: 1,
-    blur: "blur-xl",
-    speed: 3,
-  },
-  thinking: {
-    colors: ["#f59e0b", "#fbbf24", "#f59e0b"],
-    scale: 1.05,
-    blur: "blur-2xl",
-    speed: 1.5,
-  },
-  speaking: {
-    colors: ["#7c5cfc", "#e855a0", "#38b2ff"],
-    scale: 1.1,
-    blur: "blur-2xl",
-    speed: 0.6,
-  },
-  happy: {
-    colors: ["#10b981", "#34d399", "#6ee7b7"],
-    scale: 1.15,
-    blur: "blur-2xl",
-    speed: 0.8,
-  },
-  empathy: {
-    colors: ["#e855a0", "#f472b6", "#ec4899"],
-    scale: 1.08,
-    blur: "blur-2xl",
-    speed: 2,
-  },
-  bold: {
-    colors: ["#38b2ff", "#0ea5e9", "#06b6d4"],
-    scale: 1.12,
-    blur: "blur-2xl",
-    speed: 0.5,
-  },
+  idle: { scale: 1, speed: 3, ringOpacity: 0.3 },
+  thinking: { scale: 1.05, speed: 1.5, ringOpacity: 0.5 },
+  speaking: { scale: 1.1, speed: 0.6, ringOpacity: 0.7 },
+  happy: { scale: 1.15, speed: 0.8, ringOpacity: 0.6 },
+  empathy: { scale: 1.08, speed: 2, ringOpacity: 0.5 },
+  bold: { scale: 1.12, speed: 0.5, ringOpacity: 0.6 },
 };
 
-export function ZariOrb({ emotion, gender, size = 64 }: ZariOrbProps) {
+export function ZariOrb({ emotion, size = 64 }: ZariOrbProps) {
   const config = emotionConfig[emotion];
-
-  // Override colors based on gender for speaking
-  const genderColors =
-    emotion === "speaking"
-      ? gender === "female"
-        ? ["#e855a0", "#f472b6", "#e855a0"]
-        : gender === "male"
-          ? ["#38b2ff", "#0ea5e9", "#38b2ff"]
-          : config.colors
-      : config.colors;
-
   const isActive = emotion !== "idle";
 
   return (
     <div
-      className="relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      className="relative flex items-center justify-center shrink-0"
+      style={{ width: size * 1.4, height: size * 1.4 }}
     >
       {/* Outer glow */}
       <motion.div
-        className={`absolute rounded-full ${config.blur} opacity-60`}
+        className="absolute rounded-full"
         style={{
-          width: size * 1.6,
-          height: size * 1.6,
-          background: `radial-gradient(circle, ${genderColors[0]}40, transparent 70%)`,
+          width: size * 1.4,
+          height: size * 1.4,
+          background: "radial-gradient(circle, rgba(79,139,255,0.15), transparent 70%)",
+          filter: `blur(${size * 0.15}px)`,
         }}
         animate={{
-          scale: isActive ? [1, 1.2, 1] : 1,
-          opacity: isActive ? [0.4, 0.7, 0.4] : 0.3,
+          scale: isActive ? [1, 1.15, 1] : [1, 1.05, 1],
+          opacity: isActive ? [0.5, 0.8, 0.5] : [0.3, 0.4, 0.3],
         }}
         transition={{
           duration: config.speed,
@@ -91,47 +51,52 @@ export function ZariOrb({ emotion, gender, size = 64 }: ZariOrbProps) {
         }}
       />
 
-      {/* Middle ring */}
+      {/* Glowing ring */}
       <motion.div
         className="absolute rounded-full"
         style={{
-          width: size * 1.2,
-          height: size * 1.2,
-          background: `conic-gradient(from 0deg, ${genderColors[0]}, ${genderColors[1]}, ${genderColors[2]}, ${genderColors[0]})`,
-          opacity: 0.15,
+          width: size * 1.15,
+          height: size * 1.15,
+          border: `${Math.max(1, size * 0.02)}px solid rgba(124,92,252,${config.ringOpacity})`,
+          boxShadow: `0 0 ${size * 0.2}px rgba(79,139,255,0.2), inset 0 0 ${size * 0.1}px rgba(124,92,252,0.1)`,
         }}
         animate={{
           rotate: [0, 360],
-          scale: isActive ? [1, config.scale, 1] : 1,
+          scale: isActive ? [1, config.scale * 0.95, 1] : 1,
         }}
         transition={{
-          rotate: { duration: 8, repeat: Infinity, ease: "linear" },
-          scale: {
-            duration: config.speed,
-            repeat: Infinity,
-            ease: "easeInOut",
-          },
+          rotate: { duration: 12, repeat: Infinity, ease: "linear" },
+          scale: { duration: config.speed, repeat: Infinity, ease: "easeInOut" },
         }}
       />
 
-      {/* Core orb */}
+      {/* Second ring — offset */}
       <motion.div
-        className="relative rounded-full"
+        className="absolute rounded-full"
+        style={{
+          width: size * 1.22,
+          height: size * 1.22,
+          border: `${Math.max(1, size * 0.01)}px solid rgba(79,139,255,0.15)`,
+        }}
+        animate={{ rotate: [360, 0] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+
+      {/* Core orb — purple to blue gradient */}
+      <motion.div
+        className="relative rounded-full overflow-hidden"
         style={{
           width: size,
           height: size,
-          background: `radial-gradient(circle at 35% 35%, ${genderColors[1]}, ${genderColors[0]} 60%, ${genderColors[2]})`,
-          boxShadow: `0 0 ${size / 2}px ${genderColors[0]}60, inset 0 0 ${size / 3}px ${genderColors[1]}40`,
+          background: "radial-gradient(circle at 38% 35%, #d8b4fe 0%, #a78bfa 20%, #7c5cfc 45%, #4f8bff 75%, #38b2ff 100%)",
+          boxShadow: `0 0 ${size * 0.4}px rgba(124,92,252,0.4), 0 0 ${size * 0.8}px rgba(79,139,255,0.15)`,
         }}
         animate={{
           scale: isActive
             ? [1, config.scale, 0.98, config.scale, 1]
             : [1, 1.02, 1],
           ...(emotion === "speaking"
-            ? {
-                x: [0, -2, 3, -1, 2, 0],
-                y: [0, 1, -2, 2, -1, 0],
-              }
+            ? { x: [0, -1, 2, -1, 1, 0], y: [0, 1, -1, 1, -1, 0] }
             : {}),
         }}
         transition={{
@@ -140,18 +105,42 @@ export function ZariOrb({ emotion, gender, size = 64 }: ZariOrbProps) {
           ease: "easeInOut",
         }}
       >
-        {/* Inner highlight */}
+        {/* Highlight / shine spot */}
         <div
           className="absolute rounded-full"
           style={{
-            width: size * 0.3,
-            height: size * 0.2,
-            top: "18%",
-            left: "22%",
-            background: `radial-gradient(ellipse, rgba(255,255,255,0.4), transparent)`,
-            transform: "rotate(-20deg)",
+            width: size * 0.35,
+            height: size * 0.25,
+            top: "15%",
+            left: "18%",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.5), transparent)",
+            transform: "rotate(-15deg)",
           }}
         />
+
+        {/* Subtle sparkle particles */}
+        {size >= 40 && (
+          <>
+            <motion.div
+              className="absolute rounded-full bg-white/40"
+              style={{ width: 2, height: 2, top: "25%", right: "22%" }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+            />
+            <motion.div
+              className="absolute rounded-full bg-white/30"
+              style={{ width: 1.5, height: 1.5, top: "60%", left: "20%" }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, delay: 0.8 }}
+            />
+            <motion.div
+              className="absolute rounded-full bg-white/25"
+              style={{ width: 1.5, height: 1.5, bottom: "25%", right: "30%" }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
+            />
+          </>
+        )}
 
         {/* Thinking dots overlay */}
         {emotion === "thinking" && (

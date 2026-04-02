@@ -50,7 +50,10 @@ export const updatePreferences = mutation({
     language: v.optional(v.string()),
     mood: v.optional(v.string()),
     voiceEnabled: v.optional(v.boolean()),
+    voiceId: v.optional(v.string()),
+    orbColor: v.optional(v.string()),
     name: v.optional(v.string()),
+    namePronunciation: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { userId, ...updates } = args;

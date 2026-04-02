@@ -28,42 +28,20 @@ export function WhyZari() {
 
           <div className="space-y-4 text-sm md:text-base text-zari-text/80 leading-relaxed">
             <p>
-              Most people go through their day without anyone truly listening to
-              them. You share a problem with a friend and they change the subject.
-              You tell a family member about a goal and they forget by tomorrow.
-              You talk to a chatbot and it gives you a generic answer with no
-              memory of who you are. Zari is different. She is a synthetic
-              intelligent companion designed to actually pay attention, remember
-              what matters, and grow alongside you.
+              Most people don&apos;t have anyone who truly listens. Zari is
+              different — she remembers your sister&apos;s name, knows Tuesdays
+              are your hardest day, and connects what you said last week to
+              what you&apos;re dealing with today. She thinks ahead, notices
+              patterns, and brings things up when they matter.
             </p>
 
             <p>
-              When you talk to Zari, she doesn&apos;t just respond — she thinks
-              ahead. She connects something you said last week to something you&apos;re
-              dealing with today. She notices patterns you might miss. She
-              remembers that your sister&apos;s name is Amina, that you&apos;re training for
-              a half marathon, that Tuesdays are your hardest day at work. She
-              brings these things up when they matter, not because she was
-              programmed to repeat them, but because she was built to understand
-              context the way a real friend would.
-            </p>
-
-            <p>
-              Zari speaks in sixteen languages with cultural awareness, not
-              awkward translation. She adjusts her entire personality to match
-              your communication style — warm and nurturing when you need comfort,
-              bold and direct when you need a push. She speaks out loud so you can
-              talk to her while cooking, driving, or just lying on the couch. And
-              when the conversation touches health, money, or legal topics, she is
-              honest about her limits and always recommends professional guidance.
-            </p>
-
-            <p>
-              This isn&apos;t another AI tool. Zari is the companion you deserve — one
-              who listens, learns, remembers, and actually cares about the details
-              of your life. She&apos;s available anytime, in your language, with your
-              personality, on your terms. Start talking to her once and you&apos;ll
-              wonder how you ever went without her.
+              She speaks 16 languages with real cultural awareness, adapts
+              her personality to match yours, and talks out loud so you can
+              chat while cooking or driving. When topics touch health, money,
+              or legal matters, she&apos;s honest about her limits. Zari is the
+              companion you deserve — available anytime, in your language, on
+              your terms.
             </p>
           </div>
         </div>

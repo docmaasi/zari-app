@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { ZariLogo } from "@/components/zari-logo";
 
 export const metadata = {
   title: "Cookie Policy — Zari",
@@ -11,9 +12,7 @@ export default function CookiesPage() {
       <nav className="border-b border-white/5 bg-zari-bg/80 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zari-accent to-zari-pink flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <ZariLogo size={32} />
             <span className="text-lg font-bold text-zari-text">Zari</span>
           </Link>
         </div>
