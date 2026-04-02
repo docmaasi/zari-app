@@ -64,8 +64,8 @@ export function OnboardingModal({
   const handleComplete = async () => {
     await updatePreferences({
       userId,
-      gender: selectedGender,
-      language: selectedLanguage,
+      gender: selectedGender || "neutral",
+      language: selectedLanguage || "en",
     });
     onComplete();
   };

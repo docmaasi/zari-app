@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Heart, Flame, Brain, MessageSquare, X } from "lucide-react";
 
@@ -133,12 +133,14 @@ export function Milestones({ userId }: MilestonesProps) {
   const streak = useQuery(api.streaks.getStreak, { userId });
   const memoryCount = useQuery(api.memories.getCount, { userId });
   const [milestone, setMilestone] = useState<Milestone | null>(null);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
     if (streak === undefined || memoryCount === undefined) return;
+    if (checkedRef.current) return; // Only check once per mount
+    checkedRef.current = true;
     const m = checkMilestones(streak, memoryCount);
     if (m) {
-      // Delay to feel natural
       const timer = setTimeout(() => setMilestone(m), 2000);
       return () => clearTimeout(timer);
     }

@@ -81,7 +81,7 @@ RULES:
 Return ONLY valid JSON array. Nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5-20250514",
       max_tokens: 600,
       messages: [{ role: "user", content: prompt }],
     });

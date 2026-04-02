@@ -38,7 +38,9 @@ export default defineSchema({
     role: v.string(),
     content: v.string(),
     createdAt: v.number(),
-  }).index("by_conversation", ["conversationId"]),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"]),
 
   memories: defineTable({
     userId: v.id("users"),

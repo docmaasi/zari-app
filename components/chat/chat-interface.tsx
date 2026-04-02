@@ -316,7 +316,12 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
 
         for (const line of lines) {
-          const json = JSON.parse(line.slice(6));
+          let json;
+          try {
+            json = JSON.parse(line.slice(6));
+          } catch {
+            continue; // Skip malformed chunks from stream boundary splits
+          }
           if (json.text) {
             fullReply += json.text;
             const current = fullReply;
@@ -368,14 +373,16 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     }
   };
 
-  const allMessages = [
-    ...(messages || []).map((m) => ({
-      role: m.role, content: m.content, id: m._id,
-    })),
-    ...localMessages.filter(
-      (lm) => !(messages || []).some((m) => m.content === lm.content && m.role === lm.role)
-    ),
-  ];
+  // Merge Convex messages with local streaming messages
+  // Local messages are only kept if Convex hasn't caught up yet
+  const convexMsgs = (messages || []).map((m) => ({
+    role: m.role, content: m.content, id: m._id,
+  }));
+  const convexContent = new Set(convexMsgs.map((m) => `${m.role}:${m.content}`));
+  const pendingLocal = localMessages.filter(
+    (lm) => !convexContent.has(`${lm.role}:${lm.content}`)
+  );
+  const allMessages = [...convexMsgs, ...pendingLocal];
 
   const [quickActions] = useState(() =>
     getStarters(user.language || "en", gender)

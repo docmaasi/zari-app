@@ -67,15 +67,15 @@ export const setStripeCustomerId = mutation({
 export const getDailyMessageCount = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    // Use UTC midnight — not perfect for all timezones but consistent
     const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
 
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), args.userId),
           q.eq(q.field("role"), "user"),
           q.gte(q.field("createdAt"), startOfDay.getTime())
         )

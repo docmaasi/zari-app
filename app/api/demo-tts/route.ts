@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     callCount++;
 
     const { text, gender } = await request.json();
-    if (!text || text.length > 500) {
+    if (!text || text.length > 300) {
       return NextResponse.json({ error: "Invalid text" }, { status: 400 });
     }
 
