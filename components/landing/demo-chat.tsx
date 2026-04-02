@@ -474,7 +474,7 @@ export function DemoChat() {
                   : "bg-zari-blue"
               }`}
               style={{
-                height: `${12 + Math.random() * 12}px`,
+                height: `${12 + [4, 10, 2, 8, 6][i % 5]}px`,
                 animationDelay: `${i * 0.12}s`,
               }}
             />

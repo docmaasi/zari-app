@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         const sub = event.data.object;
         const item = sub.items.data[0];
         const priceId = item?.price.id || "";
-        const periodEnd = item?.current_period_end;
+        const periodEnd = item?.current_period_end ?? (sub as unknown as { current_period_end?: number }).current_period_end;
         await convex.mutation(api.subscriptions.updateSubscription, {
           stripeCustomerId: sub.customer as string,
           subscriptionId: sub.id,

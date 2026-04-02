@@ -6,6 +6,15 @@ interface Message {
   createdAt?: number;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function exportAsPDF(
   messages: Message[],
   title: string,
@@ -14,7 +23,7 @@ export function exportAsPDF(
   const html = `
     <html>
     <head>
-      <title>${title} — Zari Conversation</title>
+      <title>${escapeHtml(title)} — Zari Conversation</title>
       <style>
         body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; color: #1a1a2e; }
         h1 { font-size: 18px; color: #7c5cfc; margin-bottom: 4px; }
@@ -30,13 +39,13 @@ export function exportAsPDF(
     </head>
     <body>
       <h1>Conversation with Zari</h1>
-      <div class="subtitle">${title} — ${userName} — ${new Date().toLocaleDateString()}</div>
+      <div class="subtitle">${escapeHtml(title)} — ${escapeHtml(userName)} — ${new Date().toLocaleDateString()}</div>
       ${messages
         .map(
           (m) => `
         <div class="msg ${m.role}">
-          <div class="role ${m.role === "user" ? "user-role" : ""}">${m.role === "user" ? userName : "Zari"}</div>
-          <div class="content">${m.content.replace(/\n/g, "<br>")}</div>
+          <div class="role ${m.role === "user" ? "user-role" : ""}">${m.role === "user" ? escapeHtml(userName) : "Zari"}</div>
+          <div class="content">${escapeHtml(m.content).replace(/\n/g, "<br>")}</div>
         </div>
       `
         )

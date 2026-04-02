@@ -53,6 +53,12 @@ export function SettingsPanel({
   );
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [orbColor, setOrbColor] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("zari-orb-color") || "purple";
+    }
+    return "purple";
+  });
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -313,9 +319,10 @@ export function SettingsPanel({
                 key={c.value}
                 onClick={() => {
                   localStorage.setItem("zari-orb-color", c.value);
+                  setOrbColor(c.value);
                 }}
                 className={`w-10 h-10 rounded-xl ${c.color} border-2 transition-all ${
-                  (typeof window !== "undefined" && localStorage.getItem("zari-orb-color")) === c.value
+                  orbColor === c.value
                     ? "border-white scale-110"
                     : "border-transparent hover:border-white/30"
                 }`}
