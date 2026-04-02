@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 const DAILY_VOICE_CAP = 50; // max ElevenLabs messages per day per user
+const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
 
 export async function POST(request: Request) {
   try {
@@ -40,11 +41,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
     const voiceCount = await convex.query(
       api.subscriptions.getDailyVoiceCount,
       { userId: user._id }
     );
-    if (voiceCount >= DAILY_VOICE_CAP) {
+    if (!isAdmin && voiceCount >= DAILY_VOICE_CAP) {
       return NextResponse.json(
         {
           error: "voice_limit",

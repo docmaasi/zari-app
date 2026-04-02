@@ -1,6 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+// Admin emails that always get full Plus access
+const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
+
 export const getSubscription = query({
   args: { clerkId: v.string() },
   handler: async (ctx, args) => {
@@ -9,6 +12,15 @@ export const getSubscription = query({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .first();
     if (!user) return null;
+
+    // Admin override — full access always
+    if (ADMIN_EMAILS.includes(user.email)) {
+      return {
+        plan: "plus_yearly",
+        status: "active",
+        expiresAt: null,
+      };
+    }
 
     return {
       plan: user.plan || "free",
