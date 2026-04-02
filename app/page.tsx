@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   Sparkles,
@@ -20,8 +21,11 @@ import { SocialProof } from "@/components/landing/social-proof";
 import { MobileNav } from "@/components/landing/mobile-nav";
 import { PwaInstallButton } from "@/components/pwa-install";
 import { WhyZari } from "@/components/landing/why-zari";
+import { TrialChat } from "@/components/landing/trial-chat";
 
 export default function LandingPage() {
+  const [showTrial, setShowTrial] = useState(false);
+
   return (
     <div className="min-h-screen bg-zari-bg overflow-x-hidden">
       {/* Nav */}
@@ -158,13 +162,13 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <SignedOut>
-              <Link
-                href="/sign-up"
+              <button
+                onClick={() => setShowTrial(true)}
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:shadow-zari-accent/30 hover:-translate-y-0.5"
               >
                 Start Talking to Zari
                 <ArrowRight className="w-5 h-5" />
-              </Link>
+              </button>
               <Link
                 href="#demo"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/10 text-zari-muted font-medium hover:text-zari-text hover:border-white/20 transition-all"
@@ -559,6 +563,11 @@ export default function LandingPage() {
 
       {/* PWA Install Banner (floating) */}
       <PwaInstallButton variant="banner" />
+
+      {/* Trial Chat Modal */}
+      <AnimatePresence>
+        {showTrial && <TrialChat onClose={() => setShowTrial(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

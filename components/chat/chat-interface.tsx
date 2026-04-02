@@ -16,7 +16,7 @@ import {
   Share2,
 } from "lucide-react";
 import { getLanguage } from "@/lib/languages";
-import { speak, stopSpeaking } from "@/lib/tts";
+import { speakSmooth as speak, stopSmooth as stopSpeaking } from "@/lib/tts-enhanced";
 import { getTheme } from "@/lib/themes";
 import { MemoryPanel } from "./memory-panel";
 import { SettingsPanel } from "./settings-panel";
