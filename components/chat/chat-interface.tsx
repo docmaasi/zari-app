@@ -14,6 +14,7 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Share2,
 } from "lucide-react";
 import { getLanguage } from "@/lib/languages";
 import { speak, stopSpeaking } from "@/lib/tts";
@@ -322,6 +323,22 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
                 {memoryCount > 99 ? "99+" : memoryCount}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: "Zari — Your AI Companion",
+                  text: "Meet Zari, an AI companion that thinks, speaks, learns, and remembers.",
+                  url: "https://www.zari.help",
+                });
+              } else {
+                navigator.clipboard.writeText("https://www.zari.help");
+              }
+            }}
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowSettings(true)}

@@ -17,6 +17,7 @@ import { LanguageShowcase } from "@/components/landing/language-showcase";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { Testimonials } from "@/components/landing/testimonials";
 import { SocialProof } from "@/components/landing/social-proof";
+import { MobileNav } from "@/components/landing/mobile-nav";
 
 export default function LandingPage() {
   return (
@@ -56,7 +57,7 @@ export default function LandingPage() {
               Testimonials
             </a>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4">
             <SignedOut>
               <Link
                 href="/sign-in"
@@ -80,6 +81,7 @@ export default function LandingPage() {
               </Link>
             </SignedIn>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
@@ -476,32 +478,71 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-white/5">
+      <footer className="py-16 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-zari-accent to-zari-pink flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+            {/* Brand */}
+            <div className="md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zari-accent to-zari-pink flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-lg font-bold text-zari-text">Zari</span>
               </div>
-              <span className="text-sm font-bold text-zari-text">Zari</span>
-              <span className="text-xs text-zari-muted ml-2">
-                Your AI companion that remembers.
-              </span>
+              <p className="text-xs text-zari-muted leading-relaxed">
+                Your AI companion that thinks, speaks, learns, and remembers.
+                Available in 16 languages.
+              </p>
             </div>
-            <div className="flex items-center gap-6 text-xs text-zari-muted">
-              <a href="#features" className="hover:text-zari-text transition-colors">
-                Features
-              </a>
-              <a href="#languages" className="hover:text-zari-text transition-colors">
-                Languages
-              </a>
-              <a href="#testimonials" className="hover:text-zari-text transition-colors">
-                Testimonials
-              </a>
+
+            {/* Product */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-zari-text mb-4">
+                Product
+              </h4>
+              <div className="space-y-2">
+                <a href="#features" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Features</a>
+                <a href="#how-it-works" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">How It Works</a>
+                <a href="#languages" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Languages</a>
+                <a href="#testimonials" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Testimonials</a>
+              </div>
             </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-zari-text mb-4">
+                Legal
+              </h4>
+              <div className="space-y-2">
+                <Link href="/privacy" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Terms of Use</Link>
+                <Link href="/cookies" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">Cookie Policy</Link>
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-zari-text mb-4">
+                Contact
+              </h4>
+              <div className="space-y-2">
+                <a href="mailto:hello@zari.help" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">hello@zari.help</a>
+                <a href="mailto:support@zari.help" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">support@zari.help</a>
+                <a href="mailto:privacy@zari.help" className="block text-xs text-zari-muted hover:text-zari-text transition-colors">privacy@zari.help</a>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-zari-muted/50">
               &copy; {new Date().getFullYear()} Zari. All rights reserved.
             </p>
+            <div className="flex items-center gap-6 text-xs text-zari-muted/50">
+              <Link href="/privacy" className="hover:text-zari-muted transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-zari-muted transition-colors">Terms</Link>
+              <Link href="/cookies" className="hover:text-zari-muted transition-colors">Cookies</Link>
+            </div>
           </div>
         </div>
       </footer>
