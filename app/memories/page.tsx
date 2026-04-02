@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { MatrixRain } from "@/components/chat/matrix-rain";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -80,7 +81,10 @@ export default function MemoriesPage() {
   const categories = Object.keys(categoryConfig);
 
   return (
-    <div className="min-h-screen bg-[#06060e] font-mono">
+    <div className="min-h-screen bg-[#06060e] font-mono relative overflow-hidden">
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <MatrixRain color="#7c5cfc" opacity={0.025} speed={0.5} />
+      </div>
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
