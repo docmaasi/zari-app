@@ -99,25 +99,34 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 pt-32 pb-20 px-6 overflow-hidden">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative z-10 pt-28 pb-16 px-6 overflow-hidden">
+        {/* Cosmic background from mockup */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <img
+            src="/hero-bg.webp"
+            alt=""
+            className="w-full h-full object-cover object-top opacity-60"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#06060e]/40 via-transparent to-[#06060e]" />
+        </div>
+
+        <div className="relative z-10 max-w-5xl mx-auto text-center">
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-bold mb-5 leading-[1.1] tracking-tight"
+            className="text-5xl md:text-7xl font-bold mb-4 leading-[1.1] tracking-tight"
           >
             <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#60a5fa] bg-clip-text text-transparent">
               Meet Zari
             </span>
           </motion.h1>
 
-          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
+            transition={{ delay: 0.15, duration: 0.8 }}
             className="text-lg md:text-2xl text-white font-medium mb-2"
           >
             Your AI that actually understands you.
@@ -126,8 +135,8 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.8 }}
-            className="text-sm md:text-base text-zari-muted/70 mb-10"
+            transition={{ delay: 0.25, duration: 0.8 }}
+            className="text-sm md:text-base text-zari-muted/70 mb-8"
           >
             Zari listens, remembers, and evolves with you.
           </motion.p>
@@ -136,22 +145,16 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 1, type: "spring" }}
-            className="relative flex justify-center mb-8"
+            transition={{ delay: 0.2, duration: 1, type: "spring" }}
+            className="relative flex justify-center mb-6"
           >
-            {/* Horizontal light burst */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[2px] bg-gradient-to-r from-transparent via-zari-accent/40 to-transparent pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[120px] bg-gradient-to-r from-transparent via-zari-accent/10 to-transparent blur-[40px] pointer-events-none" />
-            {/* Vertical soft glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150px] h-[300px] bg-gradient-to-b from-transparent via-[#60a5fa]/8 to-transparent blur-[40px] pointer-events-none" />
-
             <img
               src="/zari-orb-hd.png"
               alt="Zari"
-              width={280}
-              height={280}
-              className="relative z-10 w-[200px] h-[200px] md:w-[280px] md:h-[280px]"
-              style={{ filter: "drop-shadow(0 0 50px rgba(124,92,252,0.35))" }}
+              width={240}
+              height={240}
+              className="relative z-10 w-[180px] h-[180px] md:w-[240px] md:h-[240px]"
+              style={{ filter: "drop-shadow(0 0 60px rgba(124,92,252,0.4))" }}
             />
           </motion.div>
 
@@ -159,25 +162,64 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm md:text-base text-zari-text/80 mb-10 backdrop-blur-sm"
+            transition={{ delay: 0.6 }}
+            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-8 backdrop-blur-sm"
           >
             I remember what matters.
           </motion.div>
+
+          {/* What Zari does — 4 key things */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-10"
+          >
+            {[
+              { icon: "🧠", title: "Remembers You", desc: "Names, goals, people, preferences — Zari never forgets" },
+              { icon: "🗣️", title: "Speaks Out Loud", desc: "Real voices powered by ElevenLabs. Put your headphones in." },
+              { icon: "🌍", title: "16 Languages", desc: "Not translation — true fluency with cultural awareness" },
+              { icon: "💜", title: "3 Personalities", desc: "Warm & nurturing, balanced & calm, or bold & direct" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 + i * 0.1 }}
+                className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm text-center"
+              >
+                <span className="text-2xl mb-2 block">{item.icon}</span>
+                <h3 className="text-xs font-semibold text-zari-text mb-1">{item.title}</h3>
+                <p className="text-[10px] text-zari-muted/60 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Zari's promise */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.1 }}
+            className="text-sm text-zari-muted/50 max-w-lg mx-auto mb-8 leading-relaxed italic"
+          >
+            &ldquo;I&apos;m not a chatbot. I think ahead, notice patterns, follow up on things
+            you mentioned last week, and I&apos;m always honest with you. The more we talk,
+            the more I understand your world.&rdquo;
+          </motion.p>
 
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
+            transition={{ delay: 1.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
           >
             <SignedOut>
               <button
                 onClick={() => setShowTrial(true)}
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5"
               >
-                Get Started
+                Get Started Free
                 <ArrowRight className="w-5 h-5" />
               </button>
               <Link
@@ -198,25 +240,24 @@ export default function LandingPage() {
             </SignedIn>
           </motion.div>
 
-          {/* Trust signals */}
+          {/* Trust bar */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.1 }}
-            className="flex flex-wrap items-center justify-center gap-6 text-xs text-zari-muted/50"
+            transition={{ delay: 1.3 }}
+            className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-zari-muted/40"
           >
             <span className="flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5" /> Voice Enabled
+              <Shield className="w-3 h-3" /> Private & encrypted
             </span>
+            <span className="text-zari-muted/20">|</span>
             <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" /> Private & Encrypted
+              <Zap className="w-3 h-3" /> Powered by Claude AI
             </span>
-            <span className="flex items-center gap-1.5">
-              <Heart className="w-3.5 h-3.5" /> 3 Personality Modes
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" /> Powered by Claude AI
-            </span>
+            <span className="text-zari-muted/20">|</span>
+            <span>Free to start</span>
+            <span className="text-zari-muted/20">|</span>
+            <span>No credit card</span>
           </motion.div>
         </div>
       </section>
