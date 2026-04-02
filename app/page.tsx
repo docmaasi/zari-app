@@ -98,68 +98,25 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative z-10 pt-28 pb-16 px-6">
-        <div className="max-w-5xl mx-auto text-center relative">
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 leading-tight tracking-tight"
-          >
-            <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#38b2ff] bg-clip-text text-transparent">
-              Meet Zari
-            </span>
-          </motion.h1>
+      {/* Hero — full background image */}
+      <section className="relative z-10 pt-16 overflow-hidden">
+        {/* Background image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/hero-bg.webp"
+            alt=""
+            className="w-full h-full object-cover object-center"
+          />
+          {/* Gradient fade to page bg at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#06060e] to-transparent" />
+        </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-xl md:text-2xl text-zari-text max-w-2xl mx-auto mb-2"
-          >
-            Your AI that actually understands you.
-          </motion.p>
+        {/* Interactive overlay — buttons must work */}
+        <div className="relative z-10 max-w-5xl mx-auto text-center px-6 pt-20 pb-8">
+          {/* Spacer for the visual content in the background image */}
+          <div className="h-[50vh] md:h-[55vh] min-h-[400px]" />
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-base text-zari-muted/70 max-w-xl mx-auto mb-8"
-          >
-            Zari listens, remembers, and evolves with you.
-          </motion.p>
-
-          {/* Orb with glow burst background */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            className="relative flex justify-center mb-6"
-          >
-            {/* Glow burst behind orb */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-gradient-to-r from-transparent via-zari-accent/20 to-transparent blur-[60px] pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[400px] bg-gradient-to-b from-transparent via-[#4f8bff]/15 to-transparent blur-[60px] pointer-events-none" />
-            <img
-              src="/zari-orb-hero.png"
-              alt="Zari"
-              width={220}
-              height={220}
-              className="relative z-10 w-[180px] h-[180px] md:w-[220px] md:h-[220px] drop-shadow-[0_0_60px_rgba(124,92,252,0.5)]"
-            />
-          </motion.div>
-
-          {/* "I remember what matters" bubble */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-8 backdrop-blur-sm"
-          >
-            I remember what matters.
-          </motion.div>
-
+          {/* CTA buttons positioned over the "Get Started" area */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -169,14 +126,14 @@ export default function LandingPage() {
             <SignedOut>
               <button
                 onClick={() => setShowTrial(true)}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:shadow-zari-accent/30 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent/90 text-white font-semibold text-lg hover:bg-zari-accent transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5 border border-zari-accent/30"
               >
-                Start Talking to Zari
+                Get Started
                 <ArrowRight className="w-5 h-5" />
               </button>
               <Link
                 href="#demo"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/10 text-zari-muted font-medium hover:text-zari-text hover:border-white/20 transition-all"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/15 text-zari-muted font-medium hover:text-zari-text hover:border-white/25 transition-all backdrop-blur-sm"
               >
                 See a Demo
               </Link>
@@ -197,7 +154,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-wrap items-center justify-center gap-6 mt-12 text-xs text-zari-muted/60"
+            className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-zari-muted/60"
           >
             <span className="flex items-center gap-1.5">
               <Volume2 className="w-3.5 h-3.5" /> Voice Enabled

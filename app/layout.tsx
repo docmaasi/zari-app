@@ -62,6 +62,9 @@ export default function RootLayout({
       signUpFallbackRedirectUrl="/chat"
     >
       <html lang="en">
+        <head>
+          <link rel="preload" as="image" href="/hero-bg.webp" />
+        </head>
         <body>
           <ConvexClientProvider>{children}</ConvexClientProvider>
           <ServiceWorker />
