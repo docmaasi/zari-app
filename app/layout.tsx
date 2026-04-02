@@ -63,7 +63,7 @@ export default function RootLayout({
     >
       <html lang="en">
         <head>
-          <link rel="preload" as="image" href="/hero-bg.webp" />
+          <link rel="preload" as="image" href="/zari-orb-hd.png" />
         </head>
         <body>
           <ConvexClientProvider>{children}</ConvexClientProvider>

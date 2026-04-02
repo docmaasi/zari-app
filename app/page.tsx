@@ -98,42 +98,91 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero — full background image */}
-      <section className="relative z-10 pt-16 overflow-hidden">
-        {/* Background image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/hero-bg.webp"
-            alt=""
-            className="w-full h-full object-cover object-center"
-          />
-          {/* Gradient fade to page bg at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#06060e] to-transparent" />
-        </div>
+      {/* Hero */}
+      <section className="relative z-10 pt-32 pb-20 px-6 overflow-hidden">
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-5xl md:text-7xl font-bold mb-5 leading-[1.1] tracking-tight"
+          >
+            <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#60a5fa] bg-clip-text text-transparent">
+              Meet Zari
+            </span>
+          </motion.h1>
 
-        {/* Interactive overlay — buttons must work */}
-        <div className="relative z-10 max-w-5xl mx-auto text-center px-6 pt-20 pb-8">
-          {/* Spacer for the visual content in the background image */}
-          <div className="h-[50vh] md:h-[55vh] min-h-[400px]" />
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            className="text-lg md:text-2xl text-white font-medium mb-2"
+          >
+            Your AI that actually understands you.
+          </motion.p>
 
-          {/* CTA buttons positioned over the "Get Started" area */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.8 }}
+            className="text-sm md:text-base text-zari-muted/70 mb-10"
+          >
+            Zari listens, remembers, and evolves with you.
+          </motion.p>
+
+          {/* HD Orb */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 1, type: "spring" }}
+            className="relative flex justify-center mb-8"
+          >
+            {/* Horizontal light burst */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[2px] bg-gradient-to-r from-transparent via-zari-accent/40 to-transparent pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[120px] bg-gradient-to-r from-transparent via-zari-accent/10 to-transparent blur-[40px] pointer-events-none" />
+            {/* Vertical soft glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150px] h-[300px] bg-gradient-to-b from-transparent via-[#60a5fa]/8 to-transparent blur-[40px] pointer-events-none" />
+
+            <img
+              src="/zari-orb-hd.png"
+              alt="Zari"
+              width={280}
+              height={280}
+              className="relative z-10 w-[200px] h-[200px] md:w-[280px] md:h-[280px]"
+              style={{ filter: "drop-shadow(0 0 50px rgba(124,92,252,0.35))" }}
+            />
+          </motion.div>
+
+          {/* "I remember what matters" */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm md:text-base text-zari-text/80 mb-10 backdrop-blur-sm"
+          >
+            I remember what matters.
+          </motion.div>
+
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            transition={{ delay: 0.9, duration: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
           >
             <SignedOut>
               <button
                 onClick={() => setShowTrial(true)}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent/90 text-white font-semibold text-lg hover:bg-zari-accent transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5 border border-zari-accent/30"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5"
               >
                 Get Started
                 <ArrowRight className="w-5 h-5" />
               </button>
               <Link
                 href="#demo"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/15 text-zari-muted font-medium hover:text-zari-text hover:border-white/25 transition-all backdrop-blur-sm"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border border-white/10 text-zari-muted text-sm font-medium hover:text-zari-text hover:border-white/20 transition-all"
               >
                 See a Demo
               </Link>
@@ -149,12 +198,12 @@ export default function LandingPage() {
             </SignedIn>
           </motion.div>
 
-          {/* Quick trust signals */}
+          {/* Trust signals */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-zari-muted/60"
+            transition={{ delay: 1.1 }}
+            className="flex flex-wrap items-center justify-center gap-6 text-xs text-zari-muted/50"
           >
             <span className="flex items-center gap-1.5">
               <Volume2 className="w-3.5 h-3.5" /> Voice Enabled
