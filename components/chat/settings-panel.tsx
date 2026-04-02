@@ -5,7 +5,8 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, Heart, Sparkles, Zap, Crown, ExternalLink, Gift, Copy, Check, ArrowRight } from "lucide-react";
+import { X, Settings, Heart, Sparkles, Zap, Crown, ExternalLink, Gift, Copy, Check, ArrowRight, LogOut } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { languageList } from "@/lib/languages";
 import { getVoicesForGender, getDefaultVoiceId } from "@/lib/elevenlabs-voices";
@@ -64,6 +65,7 @@ export function SettingsPanel({
   const [copied, setCopied] = useState(false);
   const getOrCreateCode = useMutation(api.referrals.getOrCreateCode);
   const { isPlusUser, plan } = useSubscription();
+  const { signOut } = useClerk();
   const updatePreferences = useMutation(api.users.updatePreferences);
   const availableVoices = getVoicesForGender(gender);
 
@@ -391,6 +393,13 @@ export function SettingsPanel({
           className="w-full py-3 rounded-xl bg-zari-accent text-white font-medium hover:bg-zari-accent/90 transition-colors disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save & Reload"}
+        </button>
+        <button
+          onClick={() => signOut({ redirectUrl: "/" })}
+          className="w-full py-3 rounded-xl border border-white/10 text-zari-muted font-medium hover:text-red-400 hover:border-red-400/30 transition-colors flex items-center justify-center gap-2 mt-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Log Out
         </button>
       </div>
 
