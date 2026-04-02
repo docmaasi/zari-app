@@ -20,6 +20,7 @@ import { getLanguage } from "@/lib/languages";
 import { speak, stopSpeaking } from "@/lib/tts";
 import { MemoryPanel } from "./memory-panel";
 import { SettingsPanel } from "./settings-panel";
+import { PwaInstallButton } from "@/components/pwa-install";
 
 interface ChatInterfaceProps {
   user: {
@@ -324,6 +325,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
               </span>
             )}
           </button>
+          <PwaInstallButton variant="header" />
           <button
             onClick={() => {
               if (navigator.share) {
@@ -350,8 +352,14 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             appearance={{
               elements: {
                 avatarBox: "w-8 h-8",
+                userButtonPopoverCard: "bg-zari-surface border border-white/10",
+                userButtonPopoverActionButton: "text-zari-text hover:bg-white/5",
+                userButtonPopoverActionButtonText: "text-zari-text",
+                userButtonPopoverFooter: "hidden",
               },
             }}
+            showName={false}
+            afterSignOutUrl="/"
           />
         </div>
       </header>

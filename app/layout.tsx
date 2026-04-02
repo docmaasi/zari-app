@@ -53,6 +53,9 @@ export default function RootLayout({
           colorText: "#e8e8f0",
         },
       }}
+      afterSignOutUrl="/"
+      signInFallbackRedirectUrl="/chat"
+      signUpFallbackRedirectUrl="/chat"
     >
       <html lang="en">
         <body>

@@ -18,6 +18,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { Testimonials } from "@/components/landing/testimonials";
 import { SocialProof } from "@/components/landing/social-proof";
 import { MobileNav } from "@/components/landing/mobile-nav";
+import { PwaInstallButton } from "@/components/pwa-install";
 
 export default function LandingPage() {
   return (
@@ -58,6 +59,7 @@ export default function LandingPage() {
             </a>
           </div>
           <div className="hidden md:flex items-center gap-4">
+            <PwaInstallButton variant="header" />
             <SignedOut>
               <Link
                 href="/sign-in"
@@ -546,6 +548,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* PWA Install Banner (floating) */}
+      <PwaInstallButton variant="banner" />
     </div>
   );
 }
