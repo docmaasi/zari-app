@@ -19,6 +19,7 @@ import { Testimonials } from "@/components/landing/testimonials";
 import { SocialProof } from "@/components/landing/social-proof";
 import { MobileNav } from "@/components/landing/mobile-nav";
 import { PwaInstallButton } from "@/components/pwa-install";
+import { WhyZari } from "@/components/landing/why-zari";
 
 export default function LandingPage() {
   return (
@@ -233,6 +234,13 @@ export default function LandingPage() {
             </p>
           </motion.div>
           <DemoChat />
+        </div>
+      </section>
+
+      {/* Why Zari */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <WhyZari />
         </div>
       </section>
 

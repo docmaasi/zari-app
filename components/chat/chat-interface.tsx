@@ -13,13 +13,15 @@ import {
   Brain,
   Settings,
   Shield,
-  Sparkles,
   Share2,
 } from "lucide-react";
 import { getLanguage } from "@/lib/languages";
 import { speak, stopSpeaking } from "@/lib/tts";
+import { getTheme } from "@/lib/themes";
 import { MemoryPanel } from "./memory-panel";
 import { SettingsPanel } from "./settings-panel";
+import { MatrixRain } from "./matrix-rain";
+import { ZariOrb } from "./zari-orb";
 import { PwaInstallButton } from "@/components/pwa-install";
 
 interface ChatInterfaceProps {
@@ -29,6 +31,7 @@ interface ChatInterfaceProps {
     gender?: string;
     language?: string;
     voiceEnabled?: boolean;
+    mood?: string;
   };
 }
 
@@ -52,35 +55,29 @@ function getDisclosure(
     lower.includes("consult a doctor") ||
     lower.includes("medical professional")
   ) {
-    return {
-      type: "health",
-      color: "bg-red-500/20 text-red-300",
-      label: "Health Disclosure",
-    };
+    return { type: "health", color: "bg-red-500/20 text-red-300", label: "Health Disclosure" };
   }
   if (
     lower.includes("not a financial") ||
     lower.includes("financial advisor") ||
     lower.includes("financial professional")
   ) {
-    return {
-      type: "finance",
-      color: "bg-green-500/20 text-green-300",
-      label: "Finance Disclosure",
-    };
+    return { type: "finance", color: "bg-green-500/20 text-green-300", label: "Finance Disclosure" };
   }
   if (
     lower.includes("not a lawyer") ||
     lower.includes("legal professional") ||
     lower.includes("legal advice")
   ) {
-    return {
-      type: "legal",
-      color: "bg-blue-500/20 text-blue-300",
-      label: "Legal Disclosure",
-    };
+    return { type: "legal", color: "bg-blue-500/20 text-blue-300", label: "Legal Disclosure" };
   }
   return null;
+}
+
+function getOrbEmotion(status: Status, gender: string) {
+  if (status === "thinking") return "thinking" as const;
+  if (status === "speaking") return gender === "female" ? "empathy" as const : "bold" as const;
+  return "idle" as const;
 }
 
 export function ChatInterface({ user }: ChatInterfaceProps) {
@@ -92,12 +89,19 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [voiceOn, setVoiceOn] = useState(user.voiceEnabled ?? true);
   const [showMemory, setShowMemory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [themeId] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("zari-theme") || "matrix-purple";
+    }
+    return "matrix-purple";
+  });
   const [localMessages, setLocalMessages] = useState<
     Array<{ role: string; content: string; id: string }>
   >([]);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const theme = getTheme(themeId);
 
   const createConversation = useMutation(api.messages.createConversation);
   const sendMessageMutation = useMutation(api.messages.sendMessage);
@@ -119,20 +123,8 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   }, [messages, localMessages, scrollToBottom]);
 
   const getThinkingPhrase = () => {
-    const phrases =
-      thinkingPhrases[lang.code] || thinkingPhrases.default;
+    const phrases = thinkingPhrases[lang.code] || thinkingPhrases.default;
     return phrases[Math.floor(Math.random() * phrases.length)];
-  };
-
-  const getAvatarGradient = () => {
-    switch (gender) {
-      case "female":
-        return "from-pink-500 to-rose-500";
-      case "male":
-        return "from-blue-500 to-cyan-500";
-      default:
-        return "from-zari-accent to-purple-500";
-    }
   };
 
   const handleSend = async () => {
@@ -150,7 +142,6 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       });
     }
 
-    // Save user message
     await sendMessageMutation({
       conversationId: convId,
       userId: user._id,
@@ -167,14 +158,10 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     setStatus("thinking");
 
     try {
-      // Call chat API
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          conversationId: convId,
-        }),
+        body: JSON.stringify({ message: text, conversationId: convId }),
       });
 
       const data = await res.json();
@@ -185,17 +172,13 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         { role: "assistant", content: reply, id: `reply-${Date.now()}` },
       ]);
 
-      // Speak if voice enabled
       if (voiceOn) {
         setStatus("speaking");
-        speak(reply, user.language || "en", gender, () => {
-          setStatus("online");
-        });
+        speak(reply, user.language || "en", gender, () => setStatus("online"));
       } else {
         setStatus("online");
       }
 
-      // Extract memories in background
       fetch("/api/extract-memories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -205,11 +188,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       setStatus("online");
       setLocalMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, something went wrong. Please try again.",
-          id: `error-${Date.now()}`,
-        },
+        { role: "assistant", content: "Sorry, something went wrong. Please try again.", id: `error-${Date.now()}` },
       ]);
     }
   };
@@ -221,20 +200,12 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     }
   };
 
-  const toggleVoice = () => {
-    if (voiceOn) stopSpeaking();
-    setVoiceOn(!voiceOn);
-  };
-
   const allMessages = [
     ...(messages || []).map((m) => ({
-      role: m.role,
-      content: m.content,
-      id: m._id,
+      role: m.role, content: m.content, id: m._id,
     })),
     ...localMessages.filter(
-      (lm) =>
-        !(messages || []).some((m) => m.content === lm.content && m.role === lm.role)
+      (lm) => !(messages || []).some((m) => m.content === lm.content && m.role === lm.role)
     ),
   ];
 
@@ -246,73 +217,44 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   ];
 
   const statusText =
-    status === "online"
-      ? lang.ui.online
-      : status === "thinking"
-        ? lang.ui.thinking
-        : status === "speaking"
-          ? lang.ui.speaking
-          : lang.ui.composing;
+    status === "online" ? lang.ui.online
+    : status === "thinking" ? lang.ui.thinking
+    : status === "speaking" ? lang.ui.speaking
+    : lang.ui.composing;
+
+  const orbEmotion = getOrbEmotion(status, gender);
 
   return (
-    <div className="h-screen flex flex-col bg-zari-bg">
+    <div className={`h-screen flex flex-col relative overflow-hidden ${theme.bgClass} ${theme.fontClass}`}>
+      {/* Matrix Rain Background */}
+      <MatrixRain
+        color={theme.matrixColor}
+        opacity={theme.matrixOpacity}
+        speed={theme.matrixSpeed}
+      />
+
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-zari-surface/50 backdrop-blur-xl">
+      <header className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-white/5 bg-black/40 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <div className="relative">
-            <div
-              className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient()} flex items-center justify-center ${
-                status === "speaking" ? "animate-pulse" : ""
-              }`}
-            >
-              {status === "speaking" ? (
-                <div className="flex gap-0.5 items-end h-4">
-                  {[0, 1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-1 bg-white rounded-full animate-wave"
-                      style={{
-                        height: "100%",
-                        animationDelay: `${i * 0.15}s`,
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <Sparkles className="w-5 h-5 text-white" />
-              )}
-            </div>
-            <div
-              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-zari-surface ${
-                status === "online"
-                  ? "bg-green-400"
-                  : status === "thinking"
-                    ? "bg-yellow-400 animate-thinking"
-                    : "bg-zari-accent animate-pulse"
-              }`}
-            />
-          </div>
+          <ZariOrb emotion={orbEmotion} gender={gender} size={40} />
           <div>
-            <h1 className="text-sm font-semibold text-zari-text">Zari</h1>
-            <p className="text-xs text-zari-muted">{statusText}</p>
+            <h1 className="text-sm font-semibold text-zari-text tracking-wide">
+              Zari
+            </h1>
+            <p className="text-xs text-zari-muted font-light tracking-wider">
+              {statusText}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={toggleVoice}
+            onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}
             className={`p-2 rounded-xl transition-colors ${
-              voiceOn
-                ? "bg-zari-accent/20 text-zari-accent"
-                : "text-zari-muted hover:text-zari-text"
+              voiceOn ? "bg-zari-accent/20 text-zari-accent" : "text-zari-muted hover:text-zari-text"
             }`}
           >
-            {voiceOn ? (
-              <Volume2 className="w-4 h-4" />
-            ) : (
-              <VolumeX className="w-4 h-4" />
-            )}
+            {voiceOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
           <button
             onClick={() => setShowMemory(true)}
@@ -320,7 +262,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
           >
             <Brain className="w-4 h-4" />
             {memoryCount && memoryCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-zari-accent text-[10px] text-white flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-zari-accent text-[10px] text-white flex items-center justify-center font-sans">
                 {memoryCount > 99 ? "99+" : memoryCount}
               </span>
             )}
@@ -329,11 +271,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
           <button
             onClick={() => {
               if (navigator.share) {
-                navigator.share({
-                  title: "Zari — Your AI Companion",
-                  text: "Meet Zari, an AI companion that thinks, speaks, learns, and remembers.",
-                  url: "https://www.zari.help",
-                });
+                navigator.share({ title: "Zari", text: "Meet Zari, your AI companion.", url: "https://www.zari.help" });
               } else {
                 navigator.clipboard.writeText("https://www.zari.help");
               }
@@ -365,29 +303,22 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       </header>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {allMessages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div
-              className={`w-20 h-20 rounded-full bg-gradient-to-br ${getAvatarGradient()} flex items-center justify-center mb-6`}
-            >
-              <Sparkles className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-xl font-semibold text-zari-text mb-2">
+            <ZariOrb emotion="idle" gender={gender} size={96} />
+            <h2 className="text-xl font-semibold text-zari-text mb-2 mt-6 tracking-wide">
               {lang.ui.talkTo}
             </h2>
-            <p className="text-sm text-zari-muted mb-8">
+            <p className="text-sm text-zari-muted mb-8 tracking-wider font-light">
               {lang.ui.howFeeling}
             </p>
             <div className="flex flex-wrap gap-2 justify-center max-w-md">
               {quickActions.map((action) => (
                 <button
                   key={action}
-                  onClick={() => {
-                    setInput(action);
-                    inputRef.current?.focus();
-                  }}
-                  className="px-4 py-2 rounded-xl bg-zari-surface border border-white/5 text-sm text-zari-muted hover:text-zari-text hover:border-zari-accent/30 transition-all"
+                  onClick={() => { setInput(action); inputRef.current?.focus(); }}
+                  className="px-4 py-2 rounded-xl bg-black/30 border border-white/5 text-sm text-zari-muted hover:text-zari-text hover:border-zari-accent/30 transition-all backdrop-blur-sm"
                 >
                   {action}
                 </button>
@@ -404,13 +335,13 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[80%] rounded-2xl px-4 py-3 backdrop-blur-sm ${
                 msg.role === "user"
-                  ? "bg-zari-accent/20 text-zari-text"
-                  : "bg-zari-surface border border-white/5 text-zari-text"
+                  ? "bg-zari-accent/15 border border-zari-accent/20 text-zari-text"
+                  : "bg-black/30 border border-white/5 text-zari-text"
               }`}
             >
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap tracking-wide">
                 {msg.content}
               </p>
               {msg.role === "assistant" && (() => {
@@ -418,9 +349,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
                 if (!disclosure) return null;
                 return (
                   <div className="mt-2">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${disclosure.color}`}
-                    >
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-sans ${disclosure.color}`}>
                       <Shield className="w-3 h-3" />
                       {disclosure.label}
                     </span>
@@ -432,26 +361,12 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         ))}
 
         {status === "thinking" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
-            <div className="bg-zari-surface border border-white/5 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-zari-accent animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-zari-muted">
-                  {getThinkingPhrase()}
-                </span>
-              </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+            <div className="bg-black/30 border border-white/5 rounded-2xl px-4 py-3 backdrop-blur-sm flex items-center gap-3">
+              <ZariOrb emotion="thinking" gender={gender} size={28} />
+              <span className="text-xs text-zari-muted tracking-wider">
+                {getThinkingPhrase()}
+              </span>
             </div>
           </motion.div>
         )}
@@ -459,9 +374,23 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         <div ref={chatEndRef} />
       </div>
 
+      {/* Centered orb when speaking */}
+      {status === "speaking" && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+        >
+          <div className="opacity-30">
+            <ZariOrb emotion="speaking" gender={gender} size={200} />
+          </div>
+        </motion.div>
+      )}
+
       {/* Input */}
-      <div className="px-4 pb-4 pt-2">
-        <div className="flex items-center gap-2 bg-zari-surface rounded-2xl border border-white/5 px-4 py-2 focus-within:border-zari-accent/50 transition-colors">
+      <div className="relative z-10 px-4 pb-4 pt-2">
+        <div className="flex items-center gap-2 bg-black/40 rounded-2xl border border-white/5 px-4 py-2 focus-within:border-zari-accent/50 transition-colors backdrop-blur-xl">
           <input
             ref={inputRef}
             type="text"
@@ -469,7 +398,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={lang.ui.howFeeling}
-            className="flex-1 bg-transparent text-sm text-zari-text placeholder:text-zari-muted/50 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-zari-text placeholder:text-zari-muted/50 focus:outline-none tracking-wide"
           />
           <button
             onClick={handleSend}
@@ -484,10 +413,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       {/* Panels */}
       <AnimatePresence>
         {showMemory && (
-          <MemoryPanel
-            userId={user._id}
-            onClose={() => setShowMemory(false)}
-          />
+          <MemoryPanel userId={user._id} onClose={() => setShowMemory(false)} />
         )}
         {showSettings && (
           <SettingsPanel
