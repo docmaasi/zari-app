@@ -38,62 +38,61 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Left — Logo + tagline */}
           <div className="flex items-center gap-3">
             <ZariOrb emotion="idle" gender="neutral" size={32} />
-            <span className="text-lg font-bold text-zari-text tracking-wider">Zari</span>
+            <div>
+              <span className="text-lg font-bold text-zari-text tracking-wider">Zari</span>
+              <span className="hidden sm:inline text-[10px] text-zari-accent-light ml-2 tracking-widest uppercase">
+                AI Companion
+              </span>
+            </div>
           </div>
+
+          {/* Center — Nav links (desktop only) */}
           <div className="hidden lg:flex items-center gap-8 text-sm text-zari-muted tracking-wide">
-            <a
-              href="#features"
-              className="hover:text-zari-text transition-colors"
-            >
-              Features
-            </a>
-            <a
-              href="#how-it-works"
-              className="hover:text-zari-text transition-colors"
-            >
-              How It Works
-            </a>
-            <a
-              href="#languages"
-              className="hover:text-zari-text transition-colors"
-            >
-              Languages
-            </a>
-            <a
-              href="#testimonials"
-              className="hover:text-zari-text transition-colors"
-            >
-              Testimonials
-            </a>
+            <a href="#features" className="hover:text-zari-text transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-zari-text transition-colors">How It Works</a>
+            <a href="#languages" className="hover:text-zari-text transition-colors">Languages</a>
+            <a href="#testimonials" className="hover:text-zari-text transition-colors">Testimonials</a>
           </div>
-          <div className="hidden lg:flex items-center gap-4">
+
+          {/* Right — CTA + actions */}
+          <div className="flex items-center gap-3">
             <PwaInstallButton variant="header" />
+
+            {/* Status pill — always visible */}
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[10px] text-green-400 tracking-wider font-medium">ONLINE</span>
+            </div>
+
+            {/* CTA button — visible on all screens */}
             <SignedOut>
+              <button
+                onClick={() => setShowTrial(true)}
+                className="px-4 py-2 rounded-xl bg-zari-accent text-white text-xs sm:text-sm font-semibold hover:bg-zari-accent/90 transition-colors shadow-lg shadow-zari-accent/20"
+              >
+                Try Zari
+              </button>
               <Link
                 href="/sign-in"
-                className="text-sm text-zari-muted hover:text-zari-text transition-colors"
+                className="hidden lg:inline text-sm text-zari-muted hover:text-zari-text transition-colors"
               >
                 Sign In
-              </Link>
-              <Link
-                href="/sign-up"
-                className="px-4 py-2 rounded-xl bg-zari-accent text-white text-sm font-medium hover:bg-zari-accent/90 transition-colors"
-              >
-                Get Started Free
               </Link>
             </SignedOut>
             <SignedIn>
               <Link
                 href="/chat"
-                className="px-4 py-2 rounded-xl bg-zari-accent text-white text-sm font-medium hover:bg-zari-accent/90 transition-colors"
+                className="px-4 py-2 rounded-xl bg-zari-accent text-white text-xs sm:text-sm font-semibold hover:bg-zari-accent/90 transition-colors shadow-lg shadow-zari-accent/20"
               >
                 Open Chat
               </Link>
             </SignedIn>
+
+            <MobileNav />
           </div>
-          <MobileNav />
         </div>
       </nav>
 
