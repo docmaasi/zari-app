@@ -14,6 +14,8 @@ import {
   Settings,
   Shield,
   Share2,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { getLanguage } from "@/lib/languages";
 import { speakSmooth as speak, stopSmooth as stopSpeaking } from "@/lib/tts-enhanced";
@@ -23,6 +25,11 @@ import { SettingsPanel } from "./settings-panel";
 import { MatrixRain } from "./matrix-rain";
 import { ZariOrb } from "./zari-orb";
 import { PwaInstallButton } from "@/components/pwa-install";
+import {
+  isVoiceInputSupported,
+  startListening,
+  stopListening,
+} from "@/lib/speech-recognition";
 
 interface ChatInterfaceProps {
   user: {
@@ -89,6 +96,8 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [voiceOn, setVoiceOn] = useState(user.voiceEnabled ?? true);
   const [showMemory, setShowMemory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [hasMic] = useState(() => isVoiceInputSupported());
   const [themeId] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("zari-theme") || "matrix-purple";
@@ -390,14 +399,75 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
 
       {/* Input */}
       <div className="relative z-10 px-4 pb-4 pt-2">
+        {/* Listening indicator */}
+        <AnimatePresence>
+          {isListening && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center justify-center gap-2 mb-2 py-2"
+            >
+              <div className="flex gap-1 items-end">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="w-1 bg-red-400 rounded-full animate-wave"
+                    style={{ height: "16px", animationDelay: `${i * 0.12}s` }}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-red-400 tracking-wider">
+                Listening...
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex items-center gap-2 bg-black/40 rounded-2xl border border-white/5 px-4 py-2 focus-within:border-zari-accent/50 transition-colors backdrop-blur-xl">
+          {/* Mic button */}
+          {hasMic && (
+            <button
+              onClick={() => {
+                if (isListening) {
+                  stopListening();
+                  setIsListening(false);
+                } else {
+                  setIsListening(true);
+                  startListening(
+                    lang.ttsLang,
+                    (text, isFinal) => {
+                      setInput(text);
+                      if (isFinal) setIsListening(false);
+                    },
+                    () => setIsListening(false),
+                    () => setIsListening(false)
+                  );
+                }
+              }}
+              disabled={status === "thinking"}
+              className={`p-2 rounded-xl transition-colors ${
+                isListening
+                  ? "bg-red-500/20 text-red-400 animate-pulse"
+                  : "text-zari-muted hover:text-zari-text"
+              }`}
+              title={isListening ? "Stop listening" : "Speak to Zari"}
+            >
+              {isListening ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
+            </button>
+          )}
+
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={lang.ui.howFeeling}
+            placeholder={hasMic ? "Type or tap mic to speak..." : lang.ui.howFeeling}
             className="flex-1 bg-transparent text-sm text-zari-text placeholder:text-zari-muted/50 focus:outline-none tracking-wide"
           />
           <button

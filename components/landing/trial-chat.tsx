@@ -2,9 +2,23 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, X, Sparkles, ArrowRight, Volume2, VolumeX } from "lucide-react";
+import {
+  Send,
+  X,
+  Sparkles,
+  ArrowRight,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
+} from "lucide-react";
 import Link from "next/link";
 import { speakSmooth, stopSmooth } from "@/lib/tts-enhanced";
+import {
+  isVoiceInputSupported,
+  startListening,
+  stopListening,
+} from "@/lib/speech-recognition";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,11 +32,12 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
   const [limitReached, setLimitReached] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [hasMic] = useState(() => isVoiceInputSupported());
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Zari introduces herself
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
@@ -111,6 +126,26 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
     setLoading(false);
   };
 
+  const toggleMic = () => {
+    if (isListening) {
+      stopListening();
+      setIsListening(false);
+      return;
+    }
+    setIsListening(true);
+    startListening(
+      "en-US",
+      (text, isFinal) => {
+        setInput(text);
+        if (isFinal) {
+          setIsListening(false);
+        }
+      },
+      () => setIsListening(false),
+      () => setIsListening(false)
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -141,11 +176,13 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
                 Zari
               </h3>
               <p className="text-[10px] text-zari-muted font-mono">
-                {isSpeaking
-                  ? "Speaking..."
-                  : loading
-                    ? "Thinking..."
-                    : "Try a quick conversation"}
+                {isListening
+                  ? "Listening..."
+                  : isSpeaking
+                    ? "Speaking..."
+                    : loading
+                      ? "Thinking..."
+                      : "Text or speak to Zari"}
               </p>
             </div>
           </div>
@@ -160,6 +197,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
                   ? "bg-zari-accent/20 text-zari-accent"
                   : "text-zari-muted"
               }`}
+              title={voiceOn ? "Mute Zari's voice" : "Unmute Zari's voice"}
             >
               {voiceOn ? (
                 <Volume2 className="w-4 h-4" />
@@ -170,6 +208,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
             <button
               onClick={() => {
                 stopSmooth();
+                stopListening();
                 onClose();
               }}
               className="p-2 rounded-xl text-zari-muted hover:text-zari-text"
@@ -214,7 +253,6 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          {/* Sign up prompt */}
           {limitReached && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -245,10 +283,58 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input */}
+        {/* Input — text + mic */}
         {!limitReached && (
           <div className="px-5 pb-5 pt-2">
+            {/* Listening indicator */}
+            <AnimatePresence>
+              {isListening && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex items-center justify-center gap-2 mb-2 py-2"
+                >
+                  <div className="flex gap-1 items-end">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-red-400 rounded-full animate-wave"
+                        style={{
+                          height: "16px",
+                          animationDelay: `${i * 0.12}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-red-400 font-mono tracking-wider">
+                    Listening...
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex items-center gap-2 bg-white/5 rounded-2xl border border-white/5 px-4 py-2 focus-within:border-zari-accent/50 transition-colors">
+              {/* Mic button */}
+              {hasMic && (
+                <button
+                  onClick={toggleMic}
+                  disabled={loading}
+                  className={`p-2 rounded-xl transition-colors ${
+                    isListening
+                      ? "bg-red-500/20 text-red-400 animate-pulse"
+                      : "text-zari-muted hover:text-zari-text"
+                  }`}
+                  title={isListening ? "Stop listening" : "Speak to Zari"}
+                >
+                  {isListening ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+
               <input
                 ref={inputRef}
                 type="text"
@@ -260,7 +346,11 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
                     handleSend();
                   }
                 }}
-                placeholder="Say something to Zari..."
+                placeholder={
+                  hasMic
+                    ? "Type or tap the mic to speak..."
+                    : "Say something to Zari..."
+                }
                 disabled={loading}
                 className="flex-1 bg-transparent text-sm text-zari-text placeholder:text-zari-muted/50 focus:outline-none font-mono tracking-wide"
               />
