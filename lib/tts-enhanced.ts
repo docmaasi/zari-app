@@ -183,19 +183,19 @@ export function speakSmooth(
     const voice = findBestVoice(lang);
     if (voice) utterance.voice = voice;
 
-    // Gender-tuned but more natural parameters
+    // Natural-sounding parameters — avoid extreme pitch shifts
     switch (gender) {
       case "female":
-        utterance.pitch = 1.08; // Slightly higher, not cartoonish
-        utterance.rate = 0.94; // Slightly slower for warmth
+        utterance.pitch = 1.05;
+        utterance.rate = 0.95;
         break;
       case "male":
-        utterance.pitch = 0.88; // Lower but not forced
-        utterance.rate = 0.92; // Measured pace
+        utterance.pitch = 0.95; // Subtle, not robotic
+        utterance.rate = 0.95;
         break;
       default:
         utterance.pitch = 1.0;
-        utterance.rate = 0.93; // Slightly slower than default for naturalness
+        utterance.rate = 0.95;
     }
 
     // Volume slightly below max to avoid distortion

@@ -176,8 +176,8 @@ async function speakLine(
   }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = ttsLang;
-  u.pitch = gender === "female" ? 1.15 : 0.82;
-  u.rate = gender === "female" ? 1.0 : 0.95;
+  u.pitch = gender === "female" ? 1.05 : 0.95;
+  u.rate = 0.95;
   const voices = window.speechSynthesis.getVoices();
   const match = voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
   if (match) u.voice = match;
