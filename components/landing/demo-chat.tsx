@@ -136,26 +136,51 @@ const introSets: DemoLine[][] = [
   ],
 ];
 
-function speakLine(
+let demoAudio: HTMLAudioElement | null = null;
+
+async function speakLine(
   text: string,
   ttsLang: string,
   gender: "female" | "male",
   onEnd: () => void
 ) {
+  // Stop any current playback
+  if (demoAudio) { demoAudio.pause(); demoAudio = null; }
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+
+  // Try ElevenLabs (secured — only allows exact demo texts)
+  try {
+    const res = await fetch("/api/demo-tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, gender }),
+    });
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      demoAudio = audio;
+      audio.onended = () => { URL.revokeObjectURL(url); demoAudio = null; onEnd(); };
+      audio.onerror = () => { URL.revokeObjectURL(url); demoAudio = null; onEnd(); };
+      await audio.play();
+      return;
+    }
+  } catch { /* fall through */ }
+
+  // Fallback: browser TTS
   if (typeof window === "undefined" || !window.speechSynthesis) {
     onEnd();
     return;
   }
-  window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = ttsLang;
   u.pitch = gender === "female" ? 1.15 : 0.82;
   u.rate = gender === "female" ? 1.0 : 0.95;
-
   const voices = window.speechSynthesis.getVoices();
   const match = voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
   if (match) u.voice = match;
-
   u.onend = onEnd;
   u.onerror = onEnd;
   window.speechSynthesis.speak(u);
@@ -251,6 +276,7 @@ export function DemoChat() {
 
   const handleReplay = () => {
     stopRef.current = true;
+    if (demoAudio) { demoAudio.pause(); demoAudio = null; }
     window.speechSynthesis?.cancel();
     const next = (setIndex + 1) % introSets.length;
     setSetIndex(next);
