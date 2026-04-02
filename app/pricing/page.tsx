@@ -46,12 +46,19 @@ export default function PricingPage() {
       ? process.env.NEXT_PUBLIC_STRIPE_PLUS_MONTHLY_PRICE_ID
       : process.env.NEXT_PUBLIC_STRIPE_PLUS_YEARLY_PRICE_ID;
 
+  const [error, setError] = useState("");
+
   async function handleUpgrade() {
     if (!isSignedIn) {
       window.location.href = "/sign-up";
       return;
     }
+    if (!priceId) {
+      setError("Pricing is not configured yet. Please try again later.");
+      return;
+    }
     setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -61,8 +68,12 @@ export default function PricingPage() {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setError(data.error || "Something went wrong. Please try again.");
+        setLoading(false);
       }
     } catch {
+      setError("Connection error. Please try again.");
       setLoading(false);
     }
   }
@@ -212,6 +223,9 @@ export default function PricingPage() {
               >
                 {loading ? "Loading..." : "Upgrade to Plus"}
               </button>
+              {error && (
+                <p className="text-xs text-red-400 mb-4">{error}</p>
+              )}
               <ul className="space-y-3">
                 {PLUS_FEATURES.map((f) => (
                   <li

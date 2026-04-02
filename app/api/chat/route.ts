@@ -184,6 +184,17 @@ export async function POST(request: Request) {
     // Get recent messages for context
     let recentMessages: Array<{ role: string; content: string }> = [];
     if (conversationId) {
+      // Verify the conversation belongs to this user
+      const isOwner = await convex.query(api.messages.verifyOwnership, {
+        conversationId,
+        userId: user._id,
+      });
+      if (!isOwner) {
+        return NextResponse.json(
+          { error: "Conversation not found" },
+          { status: 404 }
+        );
+      }
       const msgs = await convex.query(api.messages.getRecentMessages, {
         conversationId,
       });

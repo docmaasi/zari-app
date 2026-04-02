@@ -170,7 +170,6 @@ export function Questionnaire({
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [saving, setSaving] = useState(false);
   const addMemory = useMutation(api.memories.addMemory);
-  const clearByCategory = useMutation(api.memories.clearAll);
 
   const q = questions[currentQ];
   const answer = answers[q.id];

@@ -47,6 +47,17 @@ export const updateSubscription = mutation({
       .first();
     if (!user) return null;
 
+    // For cancellations, only cancel if the subscription ID matches
+    // This prevents late webhooks from cancelling a newer subscription
+    if (
+      args.subscriptionStatus === "canceled" &&
+      user.subscriptionId &&
+      args.subscriptionId &&
+      user.subscriptionId !== args.subscriptionId
+    ) {
+      return user._id; // Skip — this is an old subscription
+    }
+
     await ctx.db.patch(user._id, {
       subscriptionId: args.subscriptionId,
       subscriptionStatus: args.subscriptionStatus,

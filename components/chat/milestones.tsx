@@ -23,6 +23,7 @@ function checkMilestones(
   memoryCount: number | undefined
 ): Milestone | null {
   if (!streak) return null;
+  if (typeof window === "undefined") return null;
 
   const shownKey = "zari-milestone-shown";
   const shown = JSON.parse(localStorage.getItem(shownKey) || "[]");

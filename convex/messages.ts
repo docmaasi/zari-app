@@ -65,6 +65,17 @@ export const getAllConversations = query({
   },
 });
 
+export const verifyOwnership = query({
+  args: {
+    conversationId: v.id("conversations"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const conv = await ctx.db.get(args.conversationId);
+    return conv !== null && conv.userId === args.userId;
+  },
+});
+
 export const getMessages = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {

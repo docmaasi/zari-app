@@ -136,58 +136,17 @@ const introSets: DemoLine[][] = [
   ],
 ];
 
-let demoAudio: HTMLAudioElement | null = null;
-
-async function speakLine(
+function speakLine(
   text: string,
   ttsLang: string,
   gender: "female" | "male",
   onEnd: () => void
 ) {
-  // Stop any current audio
-  if (demoAudio) {
-    demoAudio.pause();
-    demoAudio = null;
-  }
-  if (typeof window !== "undefined" && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-  }
-
-  // Try ElevenLabs first
-  try {
-    const res = await fetch("/api/demo-tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, gender }),
-    });
-
-    if (res.ok) {
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      demoAudio = audio;
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        demoAudio = null;
-        onEnd();
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        demoAudio = null;
-        onEnd();
-      };
-      await audio.play();
-      return;
-    }
-  } catch {
-    // Fall through to browser TTS
-  }
-
-  // Fallback: browser TTS
   if (typeof window === "undefined" || !window.speechSynthesis) {
     onEnd();
     return;
   }
+  window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = ttsLang;
   u.pitch = gender === "female" ? 1.15 : 0.82;
@@ -292,7 +251,6 @@ export function DemoChat() {
 
   const handleReplay = () => {
     stopRef.current = true;
-    if (demoAudio) { demoAudio.pause(); demoAudio = null; }
     window.speechSynthesis?.cancel();
     const next = (setIndex + 1) % introSets.length;
     setSetIndex(next);
