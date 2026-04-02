@@ -27,6 +27,7 @@ export function MatrixRain({
 
     let animId: number;
     const fontSize = 14;
+    const trailLength = 20;
     let columns: number;
     let drops: number[];
 
@@ -36,34 +37,56 @@ export function MatrixRain({
       columns = Math.floor(canvas.width / fontSize);
       drops = Array(columns)
         .fill(0)
-        .map(() => Math.random() * -100);
+        .map(() => Math.random() * -50);
     };
 
     resize();
     window.addEventListener("resize", resize);
 
-    const draw = () => {
-      ctx.fillStyle = `rgba(10, 10, 20, 0.05)`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Store characters for trail effect
+    const trails: string[][] = [];
 
-      ctx.fillStyle = color;
+    const draw = () => {
+      // Clear canvas completely — no accumulating dark overlay
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       ctx.font = `${fontSize}px "JetBrains Mono", "Fira Code", monospace`;
-      ctx.globalAlpha = opacity;
 
       for (let i = 0; i < columns; i++) {
-        const char = CHARS[Math.floor(Math.random() * CHARS.length)];
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
+        // Initialize trail array for this column
+        if (!trails[i]) trails[i] = [];
 
-        // Brighter leading character
-        ctx.globalAlpha = opacity * 2.5;
-        ctx.fillText(char, x, y);
-        ctx.globalAlpha = opacity;
+        const y = drops[i];
 
-        if (y > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
+        // Add new character at the head
+        if (y >= 0) {
+          const char = CHARS[Math.floor(Math.random() * CHARS.length)];
+          trails[i].unshift(char);
+          if (trails[i].length > trailLength) trails[i].pop();
         }
+
+        // Draw trail
+        for (let j = 0; j < trails[i].length; j++) {
+          const charY = (y - j) * fontSize;
+          if (charY < 0 || charY > canvas.height) continue;
+
+          // Leading char is brightest, fades along trail
+          const fade = 1 - j / trailLength;
+          const alpha = j === 0 ? opacity * 3 : opacity * fade;
+
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = color;
+          ctx.fillText(trails[i][j], i * fontSize, charY);
+        }
+
+        // Advance drop
         drops[i] += speed;
+
+        // Reset when off screen
+        if (drops[i] * fontSize > canvas.height + trailLength * fontSize) {
+          drops[i] = Math.random() * -20;
+          trails[i] = [];
+        }
       }
 
       ctx.globalAlpha = 1;

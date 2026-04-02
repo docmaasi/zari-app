@@ -30,13 +30,13 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#06060e] overflow-x-hidden font-mono relative">
-      {/* Matrix Rain Background */}
-      <div className="fixed inset-0 z-0">
-        <MatrixRain color="#7c5cfc" opacity={0.04} speed={0.8} />
+      {/* Matrix Rain Background — subtle, behind everything */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <MatrixRain color="#7c5cfc" opacity={0.035} speed={0.6} />
       </div>
 
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-black/60 backdrop-blur-xl border-b border-white/5">
+      <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ZariOrb emotion="idle" gender="neutral" size={32} />
@@ -213,7 +213,7 @@ export default function LandingPage() {
       </section>
 
       {/* Demo Chat */}
-      <section id="demo" className="py-20 px-6 bg-black/20">
+      <section id="demo" className="py-20 px-6 bg-black/40">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -268,7 +268,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20 px-6 bg-black/30">
+      <section id="features" className="py-20 px-6 bg-black/50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -388,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* Languages */}
-      <section id="languages" className="py-20 px-6 bg-black/20">
+      <section id="languages" className="py-20 px-6 bg-black/40">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
