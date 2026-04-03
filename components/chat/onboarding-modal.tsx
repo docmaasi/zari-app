@@ -298,6 +298,7 @@ export function OnboardingModal({
                 userId={userId}
                 userName={userName}
                 onComplete={() => setStep(4)}
+                onBack={() => setStep(2)}
               />
             </div>
           </motion.div>

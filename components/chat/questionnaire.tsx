@@ -21,6 +21,7 @@ interface QuestionnaireProps {
   userId: Id<"users">;
   userName: string;
   onComplete: () => void;
+  onBack?: () => void;
   isRedo?: boolean;
 }
 
@@ -164,6 +165,7 @@ export function Questionnaire({
   userId,
   userName,
   onComplete,
+  onBack,
   isRedo,
 }: QuestionnaireProps) {
   const [currentQ, setCurrentQ] = useState(0);
@@ -330,9 +332,15 @@ export function Questionnaire({
 
       {/* Navigation */}
       <div className="px-6 pb-6 pt-2 flex items-center gap-3">
-        {currentQ > 0 && (
+        {(currentQ > 0 || onBack) && (
           <button
-            onClick={() => setCurrentQ((c) => c - 1)}
+            onClick={() => {
+              if (currentQ > 0) {
+                setCurrentQ((c) => c - 1);
+              } else if (onBack) {
+                onBack();
+              }
+            }}
             className="flex items-center gap-1 px-4 py-3 rounded-xl border border-white/10 text-zari-muted hover:text-zari-text transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
