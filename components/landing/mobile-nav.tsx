@@ -1,49 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ZariOrb } from "@/components/chat/zari-orb";
-import { MatrixRain } from "@/components/chat/matrix-rain";
-
-const navLinks = [
-  { href: "#demo", label: "Demo" },
-  { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#languages", label: "Languages" },
-  { href: "#testimonials", label: "Testimonials" },
-  { href: "/pricing", label: "Pricing" },
-];
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  const close = () => setOpen(false);
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden p-2 rounded-lg text-zari-muted hover:text-zari-text relative z-50"
+        className="lg:hidden p-2 rounded-lg text-zari-muted hover:text-zari-text"
         aria-label="Open menu"
+        style={{ position: "relative", zIndex: 60 }}
       >
         <Menu className="w-6 h-6" />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-[#06060e]/98 backdrop-blur-xl lg:hidden overflow-hidden"
-          >
-            {/* Matrix rain in the menu */}
-            <div className="absolute inset-0 z-0">
-              <MatrixRain color="#7c5cfc" opacity={0.06} speed={1} />
-            </div>
+      {open && (
+        <div
+          className="fixed inset-0 lg:hidden"
+          style={{ zIndex: 9999 }}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-[#06060e]/98 backdrop-blur-xl"
+            onClick={close}
+          />
 
-            <div className="relative z-10 flex items-center justify-between px-6 h-16">
+          {/* Menu content */}
+          <div className="relative h-full flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 h-16 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <ZariOrb emotion="idle" gender="neutral" size={32} />
                 <span className="text-lg font-bold text-zari-text font-mono tracking-wider">
@@ -51,56 +54,53 @@ export function MobileNav() {
                 </span>
               </div>
               <button
-                onClick={() => setOpen(false)}
+                onClick={close}
                 className="p-2 rounded-lg text-zari-muted hover:text-zari-text"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <nav className="relative z-10 px-6 py-8 space-y-2">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="block py-3 px-4 rounded-xl text-lg text-zari-text hover:bg-white/5 transition-colors font-mono tracking-wide"
-                >
-                  {link.label}
-                </a>
-              ))}
+            {/* Links */}
+            <nav className="flex-1 px-6 py-6 space-y-1 overflow-y-auto">
+              <a href="#demo" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-text hover:bg-white/5 transition-colors font-mono">
+                Demo
+              </a>
+              <a href="#features" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-text hover:bg-white/5 transition-colors font-mono">
+                Features
+              </a>
+              <a href="#how-it-works" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-text hover:bg-white/5 transition-colors font-mono">
+                How It Works
+              </a>
+              <a href="#languages" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-text hover:bg-white/5 transition-colors font-mono">
+                Languages
+              </a>
+              <a href="#testimonials" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-text hover:bg-white/5 transition-colors font-mono">
+                Testimonials
+              </a>
+              <Link href="/pricing" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-accent hover:bg-zari-accent/10 transition-colors font-mono font-semibold">
+                Pricing
+              </Link>
 
-              <div className="border-t border-white/5 my-6" />
+              <div className="border-t border-white/5 my-4" />
 
               <SignedOut>
-                <Link
-                  href="/sign-in"
-                  onClick={() => setOpen(false)}
-                  className="block py-3 px-4 rounded-xl text-lg text-zari-muted hover:text-zari-text font-mono tracking-wide"
-                >
+                <Link href="/sign-in" onClick={close} className="block py-3 px-4 rounded-xl text-lg text-zari-muted hover:text-zari-text font-mono">
                   Sign In
                 </Link>
-                <Link
-                  href="/sign-up"
-                  onClick={() => setOpen(false)}
-                  className="block py-3 px-4 rounded-xl text-lg text-center bg-zari-accent text-white font-semibold mt-2 font-mono tracking-wide"
-                >
+                <Link href="/sign-up" onClick={close} className="block py-4 px-4 rounded-xl text-lg text-center bg-zari-accent text-white font-semibold font-mono mt-2">
                   Get Started Free
                 </Link>
               </SignedOut>
               <SignedIn>
-                <Link
-                  href="/chat"
-                  onClick={() => setOpen(false)}
-                  className="block py-3 px-4 rounded-xl text-lg text-center bg-zari-accent text-white font-semibold font-mono tracking-wide"
-                >
+                <Link href="/chat" onClick={close} className="block py-4 px-4 rounded-xl text-lg text-center bg-zari-accent text-white font-semibold font-mono">
                   Open Chat
                 </Link>
               </SignedIn>
             </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </>
   );
 }

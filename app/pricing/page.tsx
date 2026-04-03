@@ -26,12 +26,16 @@ const FREE_FEATURES = [
 const PLUS_FEATURES = [
   { text: "200 messages per day", included: true },
   { text: "Unlimited conversations", included: true },
+  { text: "Premium ElevenLabs voices", included: true },
   { text: "All 16 languages", included: true },
   { text: "Zari remembers everything", included: true },
-  { text: "Premium AI voices (ElevenLabs)", included: true },
-  { text: "All personality styles", included: true },
-  { text: "Ambient sounds & breathing", included: true },
-  { text: "Zari's Journal & memory page", included: true },
+  { text: "All 3 personality styles", included: true },
+  { text: "Voice notes from Zari", included: true },
+  { text: "Sleep stories & ambient sounds", included: true },
+  { text: "Photo reactions (AI vision)", included: true },
+  { text: "Mood journal & emotional reports", included: true },
+  { text: "Zari's Journal (her thoughts about you)", included: true },
+  { text: "Conversation export", included: true },
 ];
 
 export default function PricingPage() {
