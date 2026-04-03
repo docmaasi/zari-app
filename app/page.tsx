@@ -99,15 +99,18 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 pt-28 pb-16 px-6 overflow-hidden">
-        {/* Cosmic background from mockup */}
+      <section className="relative z-10 pt-32 pb-20 px-6 overflow-hidden">
+        {/* Cosmic background — only the glow/burst, text area hidden */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <img
             src="/hero-bg.webp"
             alt=""
-            className="w-full h-full object-cover object-top opacity-60"
+            className="w-full h-full object-cover object-bottom opacity-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#06060e]/40 via-transparent to-[#06060e]" />
+          {/* Heavy top fade hides the text baked into the image */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#06060e] via-[#06060e]/70 via-[45%] to-transparent" />
+          {/* Bottom fade to page bg */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#06060e] to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
@@ -116,7 +119,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-bold mb-4 leading-[1.1] tracking-tight"
+            className="text-5xl md:text-7xl font-bold mb-5 leading-[1.1] tracking-tight"
           >
             <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#60a5fa] bg-clip-text text-transparent">
               Meet Zari
@@ -127,7 +130,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.8 }}
-            className="text-lg md:text-2xl text-white font-medium mb-2"
+            className="text-lg md:text-2xl text-white font-medium mb-3"
           >
             Your AI that actually understands you.
           </motion.p>
@@ -136,7 +139,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.8 }}
-            className="text-sm md:text-base text-zari-muted/70 mb-8"
+            className="text-sm md:text-base text-zari-muted/70 mb-10"
           >
             Zari listens, remembers, and evolves with you.
           </motion.p>
@@ -146,7 +149,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 1, type: "spring" }}
-            className="relative flex justify-center mb-6"
+            className="relative flex justify-center mb-8"
           >
             <img
               src="/zari-orb-hd.png"
@@ -163,7 +166,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-8 backdrop-blur-sm"
+            className="inline-block px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-zari-text/80 mb-10 backdrop-blur-sm"
           >
             I remember what matters.
           </motion.div>
@@ -173,7 +176,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-10"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-12"
           >
             {[
               { icon: "🧠", title: "Remembers You", desc: "Names, goals, people, preferences — Zari never forgets" },
