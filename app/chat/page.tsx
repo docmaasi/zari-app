@@ -3,7 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { OnboardingModal } from "@/components/chat/onboarding-modal";
 import { ZariOrb } from "@/components/chat/zari-orb";
@@ -16,6 +16,13 @@ export default function ChatPage() {
   );
   const upsertUser = useMutation(api.users.upsertUser);
   const creatingRef = useRef(false);
+  const [loadTimeout, setLoadTimeout] = useState(false);
+
+  // Show error after 15 seconds of loading
+  useEffect(() => {
+    const timer = setTimeout(() => setLoadTimeout(true), 15000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Auto-create user in Convex if they don't exist yet
   useEffect(() => {
@@ -50,7 +57,17 @@ export default function ChatPage() {
       <div className="h-screen flex items-center justify-center bg-[#06060e]">
         <div className="flex flex-col items-center gap-4">
           <ZariOrb emotion="thinking" gender="neutral" size={64} />
-          <p className="text-sm text-zari-muted font-mono">Loading Zari...</p>
+          <p className="text-sm text-zari-muted font-mono">
+            {loadTimeout ? "Taking longer than usual..." : "Loading Zari..."}
+          </p>
+          {loadTimeout && (
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs text-zari-accent hover:text-zari-accent-light transition-colors"
+            >
+              Tap to retry
+            </button>
+          )}
         </div>
       </div>
     );

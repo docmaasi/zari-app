@@ -231,15 +231,19 @@ export async function POST(request: Request) {
 
     const systemPrompt = buildSystemPrompt(user, memories) + vibeInstruction;
 
-    // Build Claude messages — if we have recent messages from Convex,
-    // the current user message is already included (client saves it first).
-    // Only append it if there are no recent messages (new conversation).
-    const claudeMessages = recentMessages.length > 0
-      ? recentMessages.map((m) => ({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        }))
-      : [{ role: "user" as const, content: message }];
+    // Build Claude messages from history + current message.
+    // Filter out the current message from history (in case Convex already has it)
+    // then always append it at the end to guarantee it's there.
+    const history = recentMessages
+      .filter((m) => !(m.role === "user" && m.content === message))
+      .map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+    const claudeMessages = [
+      ...history,
+      { role: "user" as const, content: message },
+    ];
 
     // Stream the response
     const stream = anthropic.messages.stream({

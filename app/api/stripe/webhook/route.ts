@@ -6,12 +6,13 @@ import { NextResponse } from "next/server";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 function planFromPriceId(priceId: string): string {
-  if (priceId === process.env.STRIPE_PLUS_MONTHLY_PRICE_ID) {
-    return "plus_monthly";
-  }
-  if (priceId === process.env.STRIPE_PLUS_YEARLY_PRICE_ID) {
-    return "plus_yearly";
-  }
+  // Check both private and public env var names for compatibility
+  const monthlyId = process.env.STRIPE_PLUS_MONTHLY_PRICE_ID
+    || process.env.NEXT_PUBLIC_STRIPE_PLUS_MONTHLY_PRICE_ID;
+  const yearlyId = process.env.STRIPE_PLUS_YEARLY_PRICE_ID
+    || process.env.NEXT_PUBLIC_STRIPE_PLUS_YEARLY_PRICE_ID;
+  if (monthlyId && priceId === monthlyId) return "plus_monthly";
+  if (yearlyId && priceId === yearlyId) return "plus_yearly";
   return "free";
 }
 

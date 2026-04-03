@@ -67,20 +67,15 @@ export default function VoiceNotesPage() {
     setPlaying(noteId);
     markListened({ noteId: noteId as never }).catch(() => {});
 
-    // Generate audio on the fly
-    try {
-      const res = await fetch("/api/voice-note", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "checkin" }),
-      });
-      // For now, just use browser TTS as playback
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.onend = () => setPlaying(null);
-        window.speechSynthesis.speak(u);
-      }
-    } catch {
+    // Play existing note text with browser TTS (no API call — saves credits)
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95;
+      u.onend = () => setPlaying(null);
+      u.onerror = () => setPlaying(null);
+      window.speechSynthesis.speak(u);
+    } else {
       setPlaying(null);
     }
   }
