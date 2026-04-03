@@ -75,6 +75,31 @@ export default defineSchema({
     totalMessages: v.number(),
   }).index("by_user", ["userId"]),
 
+  voiceNotes: defineTable({
+    userId: v.id("users"),
+    text: v.string(),
+    audioUrl: v.optional(v.string()), // stored audio blob URL (future: Convex file storage)
+    type: v.string(), // "checkin", "reminder", "affirmation", "milestone"
+    listened: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  reminders: defineTable({
+    userId: v.id("users"),
+    text: v.string(),
+    date: v.string(), // "2026-04-05"
+    time: v.optional(v.string()),
+    completed: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_user_date", ["userId", "date"]),
+
+  moodHistory: defineTable({
+    userId: v.id("users"),
+    mood: v.string(),
+    date: v.string(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   pushSubscriptions: defineTable({
     userId: v.id("users"),
     endpoint: v.string(),

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { api as convexApi } from "@/convex/_generated/api";
 
 interface MoodPickerProps {
   userId: Id<"users">;
@@ -26,11 +27,13 @@ const moods = [
 export function MoodPicker({ userId, currentMood, onSelect }: MoodPickerProps) {
   const [selected, setSelected] = useState(currentMood || "");
   const updatePreferences = useMutation(api.users.updatePreferences);
+  const recordMood = useMutation(convexApi.moodHistory.record);
 
   async function handleSelect(mood: string) {
     setSelected(mood);
     onSelect(mood);
     await updatePreferences({ userId, mood });
+    recordMood({ userId, mood }).catch(() => {});
   }
 
   return (

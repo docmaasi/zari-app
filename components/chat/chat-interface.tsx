@@ -21,6 +21,7 @@ import {
   Headphones,
   FileDown,
   Music,
+  Image as ImageIcon,
 } from "lucide-react";
 import { getLanguage } from "@/lib/languages";
 import { speakSmooth as speakBrowser, stopSmooth as stopBrowser } from "@/lib/tts-enhanced";
@@ -176,6 +177,44 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [showBreathing, setShowBreathing] = useState(false);
   const [sessionVibe, setSessionVibe] = useState("");
   const [showAmbient, setShowAmbient] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLocalMessages((prev) => [
+      ...prev,
+      { role: "user", content: "[Sent a photo]", id: `photo-${Date.now()}` },
+    ]);
+    setStatus("thinking");
+
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      const res = await fetch("/api/photo-react", { method: "POST", body: formData });
+      const data = await res.json();
+      const reply = data.reaction || data.message || "I love that you shared this.";
+      const replyId = `photo-reply-${Date.now()}`;
+      setLocalMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: reply, id: replyId },
+      ]);
+      if (voiceOn) {
+        setStatus("speaking");
+        speak(reply, () => setStatus("online"));
+      } else {
+        setStatus("online");
+      }
+    } catch {
+      setStatus("online");
+      setLocalMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "I couldn't see that photo. Try again?", id: `err-${Date.now()}` },
+      ]);
+    }
+    if (photoInputRef.current) photoInputRef.current.value = "";
+  };
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -708,6 +747,23 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         </AnimatePresence>
 
         <div className="flex items-center gap-2 bg-black/40 rounded-2xl border border-white/5 px-4 py-2 focus-within:border-zari-accent/50 transition-colors backdrop-blur-xl">
+          {/* Photo button */}
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
+          <button
+            onClick={() => photoInputRef.current?.click()}
+            disabled={status === "thinking"}
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            title="Send a photo"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </button>
+
           {/* Mic button */}
           {hasMic && (
             <button

@@ -10,11 +10,14 @@
 
 import type * as memories from "../memories.js";
 import type * as messages from "../messages.js";
+import type * as moodHistory from "../moodHistory.js";
 import type * as pushSubscriptions from "../pushSubscriptions.js";
 import type * as referrals from "../referrals.js";
+import type * as reminders from "../reminders.js";
 import type * as streaks from "../streaks.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as users from "../users.js";
+import type * as voiceNotes from "../voiceNotes.js";
 
 import type {
   ApiFromModules,
@@ -25,11 +28,14 @@ import type {
 declare const fullApi: ApiFromModules<{
   memories: typeof memories;
   messages: typeof messages;
+  moodHistory: typeof moodHistory;
   pushSubscriptions: typeof pushSubscriptions;
   referrals: typeof referrals;
+  reminders: typeof reminders;
   streaks: typeof streaks;
   subscriptions: typeof subscriptions;
   users: typeof users;
+  voiceNotes: typeof voiceNotes;
 }>;
 
 /**
