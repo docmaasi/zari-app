@@ -77,7 +77,7 @@ export function SettingsPanel({
       namePronunciation: namePronunciation || undefined,
       gender,
       language,
-      voiceId: isPlusUser ? voiceId : undefined,
+      voiceId,
     });
     setSaving(false);
     window.location.reload();
@@ -197,53 +197,40 @@ export function SettingsPanel({
           </select>
         </div>
 
-        {/* Voice Selection — Plus only */}
-        {isPlusUser && (
-          <div>
-            <label className="block text-sm font-medium text-zari-text mb-2">
-              Zari&apos;s Voice
-            </label>
-            <p className="text-xs text-zari-muted mb-3">
-              Powered by ElevenLabs — changes with personality
-            </p>
-            <div className="space-y-2">
-              {availableVoices.map((voice) => (
-                <button
-                  key={voice.id}
-                  onClick={() => setVoiceId(voice.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                    voiceId === voice.id
-                      ? "border-zari-accent bg-zari-accent/10"
-                      : "border-white/5 hover:border-white/10"
-                  }`}
-                >
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-zari-text">
-                      {voice.label}
-                    </span>
-                    <span className="block text-xs text-zari-muted">
-                      {voice.description} · {voice.accent}
-                    </span>
-                  </div>
-                  {voiceId === voice.id && (
-                    <div className="w-2 h-2 rounded-full bg-zari-accent" />
-                  )}
-                </button>
-              ))}
-            </div>
+        {/* Voice Selection — everyone gets ElevenLabs */}
+        <div>
+          <label className="block text-sm font-medium text-zari-text mb-2">
+            Zari&apos;s Voice
+          </label>
+          <p className="text-xs text-zari-muted mb-3">
+            Powered by ElevenLabs — changes with personality
+          </p>
+          <div className="space-y-2">
+            {availableVoices.map((voice) => (
+              <button
+                key={voice.id}
+                onClick={() => setVoiceId(voice.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                  voiceId === voice.id
+                    ? "border-zari-accent bg-zari-accent/10"
+                    : "border-white/5 hover:border-white/10"
+                }`}
+              >
+                <div className="flex-1">
+                  <span className="text-sm font-medium text-zari-text">
+                    {voice.label}
+                  </span>
+                  <span className="block text-xs text-zari-muted">
+                    {voice.description} · {voice.accent}
+                  </span>
+                </div>
+                {voiceId === voice.id && (
+                  <div className="w-2 h-2 rounded-full bg-zari-accent" />
+                )}
+              </button>
+            ))}
           </div>
-        )}
-
-        {!isPlusUser && (
-          <div className="p-4 rounded-xl bg-zari-accent/5 border border-zari-accent/20">
-            <p className="text-sm text-zari-text font-medium mb-1">
-              Premium Voices
-            </p>
-            <p className="text-xs text-zari-muted">
-              Upgrade to Zari Plus for 15 realistic AI voices powered by ElevenLabs.
-            </p>
-          </div>
-        )}
+        </div>
 
         {/* Subscription */}
         <div>

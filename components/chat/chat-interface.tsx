@@ -129,20 +129,16 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     [user.name, user.namePronunciation]
   );
 
-  // Smart speak: ElevenLabs for Plus, browser TTS for free
+  // ElevenLabs for everyone — fallback to browser TTS if it fails
   const speak = useCallback(
     async (text: string, onEnd?: () => void) => {
       const speechText = prepareForSpeech(text);
-      if (isPlusUser) {
-        const success = await speakElevenLabs(speechText, elevenLabsVoiceId, onEnd);
-        if (!success) {
-          speakBrowser(speechText, user.language || "en", gender, onEnd);
-        }
-      } else {
+      const success = await speakElevenLabs(speechText, elevenLabsVoiceId, onEnd);
+      if (!success) {
         speakBrowser(speechText, user.language || "en", gender, onEnd);
       }
     },
-    [isPlusUser, elevenLabsVoiceId, user.language, gender, prepareForSpeech]
+    [elevenLabsVoiceId, user.language, gender, prepareForSpeech]
   );
 
   const stopSpeaking = useCallback(() => {

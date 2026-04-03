@@ -23,34 +23,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check subscription — ElevenLabs is Plus-only
-    const subscription = await convex.query(
-      api.subscriptions.getSubscription,
-      { clerkId }
-    );
-    if (subscription?.status !== "active") {
-      return NextResponse.json(
-        { error: "plus_required", message: "ElevenLabs voices are a Plus feature." },
-        { status: 403 }
-      );
-    }
-
-    // Check daily voice cap
     const user = await convex.query(api.users.getByClerkId, { clerkId });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Check subscription for voice cap (ElevenLabs for everyone, cap differs)
+    const subscription = await convex.query(
+      api.subscriptions.getSubscription,
+      { clerkId }
+    );
+    const isPlusUser = subscription?.status === "active";
+
     const isAdmin = ADMIN_EMAILS.includes(user.email);
+    const voiceCap = isPlusUser ? 200 : 5; // Free: 5, Plus: 200, Admin: unlimited
     const voiceCount = await convex.query(
       api.subscriptions.getDailyVoiceCount,
       { userId: user._id }
     );
-    if (!isAdmin && voiceCount >= DAILY_VOICE_CAP) {
+    if (!isAdmin && voiceCount >= voiceCap) {
       return NextResponse.json(
         {
           error: "voice_limit",
-          message: `You've used ${DAILY_VOICE_CAP} voice messages today. Zari will use browser voice for the rest of the day.`,
+          message: isPlusUser
+            ? "You've reached your voice limit for today. Come back tomorrow."
+            : "Upgrade to Zari Plus for more voice messages with Zari.",
         },
         { status: 429 }
       );

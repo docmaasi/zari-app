@@ -158,18 +158,32 @@ export async function POST(request: Request) {
       { clerkId }
     );
     const isPlusUser = subscription?.status === "active";
+    const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
 
-    if (!isPlusUser) {
-      const dailyCount = await convex.query(
-        api.subscriptions.getDailyMessageCount,
-        { userId: user._id }
-      );
-      if (dailyCount >= 5) {
+    const dailyCount = await convex.query(
+      api.subscriptions.getDailyMessageCount,
+      { userId: user._id }
+    );
+
+    if (!isAdmin) {
+      if (!isPlusUser && dailyCount >= 5) {
         return NextResponse.json(
           {
             error: "daily_limit",
             message:
-              "You've reached your 5 free messages today. Upgrade to Zari Plus for unlimited messages.",
+              "You've reached your 5 free messages today. Upgrade to Zari Plus for more.",
+          },
+          { status: 429 }
+        );
+      }
+      // Plus users get 200/day — generous but protects against abuse
+      if (isPlusUser && dailyCount >= 200) {
+        return NextResponse.json(
+          {
+            error: "daily_limit",
+            message:
+              "You've reached your daily limit. Come back tomorrow — I'll be here.",
           },
           { status: 429 }
         );
