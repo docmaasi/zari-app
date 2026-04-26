@@ -93,7 +93,7 @@ export default function LandingPage() {
               </Link>
             </SignedIn>
 
-            <MobileNav />
+            <MobileNav onTryZari={() => setShowTrial(true)} />
           </div>
         </div>
       </nav>

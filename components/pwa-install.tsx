@@ -1,77 +1,63 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
+import { usePwaInstall } from "@/lib/use-pwa-install";
+import { PwaInstallInstructions } from "@/components/pwa-install-instructions";
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+interface Props {
+  variant?: "header" | "banner";
 }
 
-export function PwaInstallButton({ variant = "header" }: { variant?: "header" | "banner" }) {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+export function PwaInstallButton({ variant = "header" }: Props) {
+  const { canPrompt, isInstalled, promptInstall } = usePwaInstall();
   const [dismissed, setDismissed] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-      return;
-    }
-
-    // Check if dismissed recently
-    const dismissedAt = localStorage.getItem("pwa-dismiss");
-    if (dismissedAt && Date.now() - Number(dismissedAt) < 86400000) {
+    const at = localStorage.getItem("pwa-dismiss");
+    if (at && Date.now() - Number(at) < 86400000) {
       setDismissed(true);
     }
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    window.addEventListener("appinstalled", () => {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-    });
-
-    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setIsInstalled(true);
-    }
-    setDeferredPrompt(null);
-  };
+  if (isInstalled) return null;
 
-  const handleDismiss = () => {
+  async function handleInstall() {
+    if (canPrompt) {
+      await promptInstall();
+    } else {
+      setShowInstructions(true);
+    }
+  }
+
+  function handleDismiss() {
     setDismissed(true);
     localStorage.setItem("pwa-dismiss", String(Date.now()));
-  };
-
-  if (isInstalled || !deferredPrompt) return null;
+  }
 
   if (variant === "header") {
     return (
-      <button
-        onClick={handleInstall}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zari-accent/15 text-zari-accent text-xs font-medium hover:bg-zari-accent/25 transition-colors"
-      >
-        <Download className="w-3.5 h-3.5" />
-        Install App
-      </button>
+      <>
+        <button
+          type="button"
+          onClick={handleInstall}
+          aria-label="Install Zari as an app"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zari-accent/15 text-zari-accent text-xs font-medium hover:bg-zari-accent/25 transition-colors"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Install App</span>
+          <span className="sm:hidden">Install</span>
+        </button>
+        <PwaInstallInstructions
+          open={showInstructions}
+          onClose={() => setShowInstructions(false)}
+        />
+      </>
     );
   }
 
-  if (dismissed) return null;
+  if (dismissed || !canPrompt) return null;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 bg-zari-surface border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/50">
@@ -86,12 +72,14 @@ export function PwaInstallButton({ variant = "header" }: { variant?: "header" | 
           </p>
           <div className="flex gap-2 mt-3">
             <button
+              type="button"
               onClick={handleInstall}
               className="px-4 py-1.5 rounded-lg bg-zari-accent text-white text-xs font-medium hover:bg-zari-accent/90 transition-colors"
             >
               Install
             </button>
             <button
+              type="button"
               onClick={handleDismiss}
               className="px-4 py-1.5 rounded-lg border border-white/10 text-zari-muted text-xs hover:text-zari-text transition-colors"
             >
@@ -100,7 +88,9 @@ export function PwaInstallButton({ variant = "header" }: { variant?: "header" | 
           </div>
         </div>
         <button
+          type="button"
           onClick={handleDismiss}
+          aria-label="Dismiss install banner"
           className="p-1 text-zari-muted hover:text-zari-text"
         >
           <X className="w-4 h-4" />
