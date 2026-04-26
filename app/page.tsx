@@ -555,16 +555,15 @@ export default function LandingPage() {
               </div>
               <h3 className="text-lg font-semibold text-zari-text mb-2">Zari Plus</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-zari-text">$9</span>
+                <span className="text-4xl font-bold text-zari-text">$9.99</span>
                 <span className="text-zari-muted ml-1">/month</span>
               </div>
-              <p className="text-xs text-zari-accent mb-4">or $99.99/year (save ~$8)</p>
+              <p className="text-xs text-zari-accent mb-4">or $99.99/year (save ~$20)</p>
               <p className="text-sm text-zari-muted mb-6">The full Zari experience. Everything unlocked.</p>
               <ul className="space-y-3 text-sm">
                 {[
-                  "200 messages per day",
+                  "Unlimited Daily Conversations",
                   "Premium Zari Voices",
-                  "Unlimited conversations",
                   "Zari remembers everything",
                   "All 16 languages",
                   "All 3 personality styles",
@@ -581,9 +580,12 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+              <p className="mt-6 mb-2 text-[11px] text-center text-zari-muted/80">
+                30-day money back. Cancel anytime.
+              </p>
               <Link
                 href="/pricing"
-                className="block mt-6 py-3 rounded-xl bg-zari-accent text-white text-center text-sm font-semibold hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/20"
+                className="block py-3 rounded-xl bg-zari-accent text-white text-center text-sm font-semibold hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/20"
               >
                 Upgrade to Plus
               </Link>

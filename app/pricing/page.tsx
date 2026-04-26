@@ -24,8 +24,7 @@ const FREE_FEATURES = [
 ];
 
 const PLUS_FEATURES = [
-  { text: "200 messages per day", included: true },
-  { text: "Unlimited conversations", included: true },
+  { text: "Unlimited Daily Conversations", included: true },
   { text: "Premium Zari Voices", included: true },
   { text: "All 16 languages", included: true },
   { text: "Zari remembers everything", included: true },
@@ -43,9 +42,9 @@ export default function PricingPage() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
 
-  const price = billing === "monthly" ? "$9" : "$99.99";
+  const price = billing === "monthly" ? "$9.99" : "$99.99";
   const period = billing === "monthly" ? "/month" : "/year";
-  const savings = billing === "yearly" ? "Save ~$8/year" : null;
+  const savings = billing === "yearly" ? "Save ~$20/year" : null;
 
   const priceId =
     billing === "monthly"
@@ -226,6 +225,9 @@ export default function PricingPage() {
               </div>
               <p className="text-sm text-zari-muted mb-8">
                 The full Zari experience. Everything unlocked.
+              </p>
+              <p className="text-xs text-center text-zari-muted/80 mb-2">
+                30-day money back, no questions asked. Cancel anytime.
               </p>
               <button
                 onClick={handleUpgrade}
