@@ -142,6 +142,7 @@ async function speakLine(
   text: string,
   ttsLang: string,
   gender: "female" | "male",
+  volume: number,
   onEnd: () => void
 ) {
   // Stop any current playback
@@ -161,6 +162,7 @@ async function speakLine(
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
+      audio.volume = volume;
       demoAudio = audio;
       audio.onended = () => { URL.revokeObjectURL(url); demoAudio = null; onEnd(); };
       audio.onerror = () => { URL.revokeObjectURL(url); demoAudio = null; onEnd(); };
@@ -178,6 +180,7 @@ async function speakLine(
   u.lang = ttsLang;
   u.pitch = gender === "female" ? 1.05 : 0.95;
   u.rate = 0.95;
+  u.volume = volume;
   const voices = window.speechSynthesis.getVoices();
   const match = voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
   if (match) u.voice = match;
@@ -195,9 +198,15 @@ export function DemoChat() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
+  const [volume, setVolume] = useState(0.7);
   const [completedLines, setCompletedLines] = useState<number[]>([]);
   const stopRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Apply volume changes to the live audio element
+  useEffect(() => {
+    if (demoAudio) demoAudio.volume = volume;
+  }, [volume]);
 
   const lines = introSets[setIndex];
 
@@ -250,11 +259,14 @@ export function DemoChat() {
       };
 
       if (voiceOn) {
-        speakLine(line.text, line.ttsLang, line.gender, afterSpeak);
+        speakLine(line.text, line.ttsLang, line.gender, volume, afterSpeak);
       } else {
         setTimeout(afterSpeak, 800);
       }
     });
+    // volume intentionally omitted — current line keeps its initial volume,
+    // subsequent lines pick up the new value via this effect re-running
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineIndex, lines, typeLine, voiceOn]);
 
   // Auto-play on mount
@@ -335,25 +347,45 @@ export function DemoChat() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => {
               setVoiceOn(!voiceOn);
-              if (voiceOn) window.speechSynthesis?.cancel();
+              if (voiceOn) {
+                window.speechSynthesis?.cancel();
+                if (demoAudio) demoAudio.pause();
+              }
             }}
-            className={`p-2 rounded-xl transition-colors ${
+            aria-label={voiceOn ? "Mute Zari's voice" : "Unmute Zari's voice"}
+            aria-pressed={!voiceOn}
+            className={`p-2 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent ${
               voiceOn
                 ? "bg-zari-accent/20 text-zari-accent"
                 : "text-zari-muted hover:text-zari-text"
             }`}
           >
-            {voiceOn ? (
+            {voiceOn && volume > 0 ? (
               <Volume2 className="w-4 h-4" />
             ) : (
               <VolumeX className="w-4 h-4" />
             )}
           </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={volume}
+            disabled={!voiceOn}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            aria-label="Demo volume"
+            aria-valuetext={`${Math.round(volume * 100)}%`}
+            className="w-20 sm:w-24 accent-zari-accent disabled:opacity-40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent rounded"
+          />
           <button
+            type="button"
             onClick={handleReplay}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            aria-label="Play a different demo"
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
             title="New demo"
           >
             <RotateCcw className="w-4 h-4" />

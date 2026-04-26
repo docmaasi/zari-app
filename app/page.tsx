@@ -105,10 +105,10 @@ export default function LandingPage() {
           <img
             src="/hero-bg.webp"
             alt=""
-            className="w-full h-full object-cover object-bottom opacity-50"
+            className="w-full h-full object-cover object-bottom opacity-25 blur-sm"
           />
-          {/* Heavy top fade hides the text baked into the image */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#06060e] via-[#06060e]/70 via-[45%] to-transparent" />
+          {/* Heavier top fade hides the text baked into the image and lifts hero copy contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#06060e] via-[#06060e]/85 via-[55%] to-transparent" />
           {/* Bottom fade to page bg */}
           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#06060e] to-transparent" />
         </div>
@@ -139,7 +139,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.8 }}
-            className="text-sm md:text-base text-zari-muted/70 mb-10"
+            className="text-sm md:text-base text-zari-muted mb-10"
           >
             Zari listens, remembers, and evolves with you.
           </motion.p>
@@ -189,26 +189,29 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 + i * 0.1 }}
-                className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm text-center"
+                className="p-4 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-sm text-center"
               >
                 <span className="text-2xl mb-2 block">{item.icon}</span>
                 <h3 className="text-xs font-semibold text-zari-text mb-1">{item.title}</h3>
-                <p className="text-[10px] text-zari-muted/60 leading-relaxed">{item.desc}</p>
+                <p className="text-[11px] text-zari-muted leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </motion.div>
 
           {/* Zari's promise */}
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.1 }}
-            className="text-sm text-zari-muted/50 max-w-lg mx-auto mb-8 leading-relaxed italic"
+            className="max-w-xl mx-auto mb-8"
           >
-            &ldquo;I&apos;m not a chatbot. I think ahead, notice patterns, follow up on things
-            you mentioned last week, and I&apos;m always honest with you. The more we talk,
-            the more I understand your world.&rdquo;
-          </motion.p>
+            <blockquote className="text-base md:text-lg text-zari-text font-medium leading-relaxed italic px-6 py-5 rounded-2xl bg-black/50 border border-white/10 backdrop-blur-sm shadow-lg shadow-black/20">
+              &ldquo;I&apos;m not a chatbot. I think ahead, notice patterns,
+              follow up on things you mentioned last week, and I&apos;m always
+              honest with you. The more we talk, the more I understand your
+              world.&rdquo;
+            </blockquote>
+          </motion.div>
 
           {/* CTA */}
           <motion.div
@@ -219,18 +222,25 @@ export default function LandingPage() {
           >
             <SignedOut>
               <button
+                type="button"
                 onClick={() => setShowTrial(true)}
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#06060e]"
               >
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />
               </button>
-              <Link
+              <a
                 href="#demo"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border border-white/10 text-zari-muted text-sm font-medium hover:text-zari-text hover:border-white/20 transition-all"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document
+                    .getElementById("demo")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border border-white/20 bg-black/30 text-zari-text text-sm font-medium hover:border-white/40 hover:bg-black/50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#06060e]"
               >
                 See a Demo
-              </Link>
+              </a>
             </SignedOut>
             <SignedIn>
               <Link
@@ -248,7 +258,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.3 }}
-            className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-zari-muted/40"
+            className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-zari-muted/80"
           >
             <span className="flex items-center gap-1.5">
               <Shield className="w-3 h-3" /> Private & encrypted
