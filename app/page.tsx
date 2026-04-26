@@ -23,6 +23,7 @@ import { PwaInstallButton } from "@/components/pwa-install";
 import { WhyZari } from "@/components/landing/why-zari";
 import { TrialChat } from "@/components/landing/trial-chat";
 import { BackToTop } from "@/components/landing/back-to-top";
+import { FeatureCards } from "@/components/landing/feature-cards";
 import { MatrixRain } from "@/components/chat/matrix-rain";
 import { ZariOrb } from "@/components/chat/zari-orb";
 
@@ -171,32 +172,8 @@ export default function LandingPage() {
             I remember what matters.
           </motion.div>
 
-          {/* What Zari does — 4 key things */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-12"
-          >
-            {[
-              { icon: "🧠", title: "Remembers You", desc: "Names, goals, people, preferences — Zari never forgets" },
-              { icon: "🗣️", title: "Speaks Out Loud", desc: "Real voices powered by ElevenLabs. Put your headphones in." },
-              { icon: "🌍", title: "16 Languages", desc: "Not translation — true fluency with cultural awareness" },
-              { icon: "💜", title: "3 Personalities", desc: "Warm & nurturing, balanced & calm, or bold & direct" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + i * 0.1 }}
-                className="p-4 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-sm text-center"
-              >
-                <span className="text-2xl mb-2 block">{item.icon}</span>
-                <h3 className="text-xs font-semibold text-zari-text mb-1">{item.title}</h3>
-                <p className="text-[11px] text-zari-muted leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {/* What Zari does — 4 key things, each clickable for details */}
+          <FeatureCards />
 
           {/* Zari's promise */}
           <motion.div
