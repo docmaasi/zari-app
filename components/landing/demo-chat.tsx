@@ -208,6 +208,28 @@ export function DemoChat() {
     if (demoAudio) demoAudio.volume = volume;
   }, [volume]);
 
+  // Hard-stop demo audio when other parts of the page take over (e.g. Try Zari opens)
+  useEffect(() => {
+    function hardStop() {
+      stopRef.current = true;
+      if (demoAudio) {
+        try { demoAudio.pause(); } catch { /* noop */ }
+        demoAudio = null;
+      }
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      setIsPlaying(false);
+      setIsSpeaking(false);
+    }
+    window.addEventListener("zari:stop-demo", hardStop);
+    return () => {
+      window.removeEventListener("zari:stop-demo", hardStop);
+      // Also stop on unmount (e.g. client-side navigation away from /)
+      hardStop();
+    };
+  }, []);
+
   const lines = introSets[setIndex];
 
   const typeLine = useCallback(

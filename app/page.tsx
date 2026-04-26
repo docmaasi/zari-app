@@ -30,6 +30,13 @@ import { ZariOrb } from "@/components/chat/zari-orb";
 export default function LandingPage() {
   const [showTrial, setShowTrial] = useState(false);
 
+  function openTrial() {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("zari:stop-demo"));
+    }
+    setShowTrial(true);
+  }
+
   return (
     <div className="min-h-screen bg-[#06060e] overflow-x-hidden font-mono relative">
       {/* Matrix Rain Background — subtle, behind everything */}
@@ -73,7 +80,7 @@ export default function LandingPage() {
             {/* CTA button — visible on all screens */}
             <SignedOut>
               <button
-                onClick={() => setShowTrial(true)}
+                onClick={openTrial}
                 className="px-4 py-2 rounded-xl bg-zari-accent text-white text-xs sm:text-sm font-semibold hover:bg-zari-accent/90 transition-colors shadow-lg shadow-zari-accent/20"
               >
                 Try Zari
@@ -94,7 +101,7 @@ export default function LandingPage() {
               </Link>
             </SignedIn>
 
-            <MobileNav onTryZari={() => setShowTrial(true)} />
+            <MobileNav onTryZari={openTrial} />
           </div>
         </div>
       </nav>
@@ -200,7 +207,7 @@ export default function LandingPage() {
             <SignedOut>
               <button
                 type="button"
-                onClick={() => setShowTrial(true)}
+                onClick={openTrial}
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-zari-accent text-white font-semibold text-lg hover:bg-zari-accent/90 transition-all shadow-lg shadow-zari-accent/25 hover:shadow-xl hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#06060e]"
               >
                 Get Started Free
