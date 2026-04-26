@@ -5,19 +5,16 @@ type Ctx = QueryCtx | MutationCtx;
 
 /**
  * Enforce that the authenticated caller owns the user record at `userId`.
- *
- * If JWT identity is present (Clerk-Convex integration active) and does NOT
- * match the record owner, throw. If identity is absent, fall back to legacy
- * arg-trust mode — the API route layer is expected to have authenticated the
- * caller via Clerk auth() before reaching here. Direct browser calls without
- * JWT will be rejected once the Clerk JWT template is configured.
+ * Strict mode: requires a Clerk JWT identity. Throws on missing identity
+ * or owner mismatch. API routes must call Convex via getAuthenticatedConvex()
+ * so the request carries a Clerk JWT.
  */
 export async function assertOwnerByUserId(
   ctx: Ctx,
   userId: Id<"users">
 ): Promise<void> {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return;
+  if (!identity) throw new Error("Unauthenticated");
   const user = await ctx.db.get(userId);
   if (!user || user.clerkId !== identity.subject) {
     throw new Error("Forbidden");
@@ -25,14 +22,14 @@ export async function assertOwnerByUserId(
 }
 
 /**
- * Enforce that the authenticated caller's Clerk subject matches the given clerkId.
+ * Strict: caller's JWT subject must equal clerkId.
  */
 export async function assertOwnerByClerkId(
   ctx: Ctx,
   clerkId: string
 ): Promise<void> {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return;
+  if (!identity) throw new Error("Unauthenticated");
   if (identity.subject !== clerkId) {
     throw new Error("Forbidden");
   }

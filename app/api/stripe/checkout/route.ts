@@ -1,15 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { getStripe } from "@/lib/stripe";
 import { NextResponse } from "next/server";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { getAuthenticatedConvex } from "@/lib/convex-server";
 
 export async function POST(request: Request) {
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const convex = await getAuthenticatedConvex();
+    if (!convex) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

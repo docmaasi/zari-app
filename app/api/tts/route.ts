@@ -1,9 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { getAuthenticatedConvex } from "@/lib/convex-server";
 
 const DAILY_VOICE_CAP = 50; // max ElevenLabs messages per day per user
 const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
@@ -12,6 +10,10 @@ export async function POST(request: Request) {
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const convex = await getAuthenticatedConvex();
+    if (!convex) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

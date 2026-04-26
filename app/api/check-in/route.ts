@@ -1,16 +1,19 @@
 import { auth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { getAuthenticatedConvex } from "@/lib/convex-server";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 export async function POST() {
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const convex = await getAuthenticatedConvex();
+    if (!convex) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
