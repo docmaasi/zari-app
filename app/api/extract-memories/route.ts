@@ -32,6 +32,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Gate extraction to Plus users — free users never read memories
+    // (chat route only injects them for active subscribers), so running
+    // Claude Haiku on every free message is pure waste.
+    const subscription = await convex.query(api.subscriptions.getSubscription, {
+      clerkId,
+    });
+    if (subscription?.status !== "active") {
+      return NextResponse.json({ count: 0, skipped: "free_tier" });
+    }
+
     const extractionPrompt = `Analyze the user message below and extract any facts, events, people mentioned, or topics worth remembering about the user. Return a JSON array of memories.
 
 Each memory object should have:
