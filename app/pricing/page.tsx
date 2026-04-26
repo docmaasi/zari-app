@@ -16,7 +16,7 @@ import {
 const FREE_FEATURES = [
   { text: "5 messages per day", included: true },
   { text: "1 conversation", included: true },
-  { text: "ElevenLabs AI voice", included: true },
+  { text: "Zari AI Voice", included: true },
   { text: "English only", included: true },
   { text: "Memory", included: false },
   { text: "All personality styles", included: false },
@@ -26,7 +26,7 @@ const FREE_FEATURES = [
 const PLUS_FEATURES = [
   { text: "200 messages per day", included: true },
   { text: "Unlimited conversations", included: true },
-  { text: "Premium ElevenLabs voices", included: true },
+  { text: "Premium Zari Voices", included: true },
   { text: "All 16 languages", included: true },
   { text: "Zari remembers everything", included: true },
   { text: "All 3 personality styles", included: true },

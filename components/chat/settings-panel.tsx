@@ -203,7 +203,7 @@ export function SettingsPanel({
             Zari&apos;s Voice
           </label>
           <p className="text-xs text-zari-muted mb-3">
-            Powered by ElevenLabs — changes with personality
+            Premium Zari Voices — changes with personality
           </p>
           <div className="space-y-2">
             {availableVoices.map((voice) => (

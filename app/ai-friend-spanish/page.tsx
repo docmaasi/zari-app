@@ -62,7 +62,7 @@ export default function SpanishPage() {
               Habla en Voz Alta
             </h3>
             <p className="text-xs text-zari-muted">
-              Voces reales de ElevenLabs. Ponte los audífonos y solo habla.
+              Voces naturales de Zari. Ponte los audífonos y solo habla.
             </p>
           </div>
           <div className="p-6 rounded-2xl bg-zari-surface border border-white/5">

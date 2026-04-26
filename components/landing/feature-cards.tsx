@@ -25,7 +25,7 @@ const FEATURES: Feature[] = [
     id: "voice",
     icon: "🗣️",
     title: "Speaks Out Loud",
-    shortDesc: "Real voices powered by ElevenLabs. Put your headphones in.",
+    shortDesc: "Natural Zari Voice conversations. Put your headphones in.",
     fullDesc:
       "Talk naturally with Zari using realistic voice conversations. Listen hands-free while walking, driving, relaxing, or multitasking. Voice mode is designed to feel fluid, responsive, and personal, turning chat into a more human experience. You can switch between text and voice mid-conversation whenever it suits you.",
   },

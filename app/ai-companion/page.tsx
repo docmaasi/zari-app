@@ -42,7 +42,7 @@ export default function AICompanionPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
           {[
             { icon: Brain, title: "Permanent Memory", desc: "Zari remembers every detail you share — names, dates, goals, preferences." },
-            { icon: Volume2, title: "Speaks Out Loud", desc: "Real voice powered by ElevenLabs. Put your headphones in and just talk." },
+            { icon: Volume2, title: "Speaks Out Loud", desc: "Natural Zari AI voice conversations. Put your headphones in and just talk." },
             { icon: Globe, title: "16 Languages", desc: "Not translation — true fluency with cultural awareness in every language." },
             { icon: Heart, title: "3 Personalities", desc: "Warm & nurturing, balanced & adaptive, or bold & direct. Your choice." },
             { icon: Shield, title: "Responsible AI", desc: "Honest about limitations. Recommends professionals for health, finance, legal." },

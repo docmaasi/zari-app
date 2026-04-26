@@ -504,7 +504,7 @@ export default function LandingPage() {
               Start Free. Upgrade When You&apos;re Ready.
             </h2>
             <p className="text-zari-muted max-w-lg mx-auto">
-              Everyone gets ElevenLabs premium voices. Plus unlocks the full experience.
+              Everyone gets Premium Zari Voices. Plus unlocks the full experience.
             </p>
           </motion.div>
 
@@ -525,7 +525,7 @@ export default function LandingPage() {
               <ul className="space-y-3 text-sm">
                 {[
                   { text: "5 messages per day", ok: true },
-                  { text: "ElevenLabs AI voice", ok: true },
+                  { text: "Zari AI Voice", ok: true },
                   { text: "1 conversation", ok: true },
                   { text: "English only", ok: true },
                   { text: "Memory & personality", ok: false },
@@ -563,7 +563,7 @@ export default function LandingPage() {
               <ul className="space-y-3 text-sm">
                 {[
                   "200 messages per day",
-                  "Premium ElevenLabs voices",
+                  "Premium Zari Voices",
                   "Unlimited conversations",
                   "Zari remembers everything",
                   "All 16 languages",
