@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
+import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { NextResponse } from "next/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -39,15 +40,8 @@ export async function POST() {
     });
 
     const gender = user.gender || "neutral";
-    const memoryContext = memories
-      .slice(0, 20)
-      .map((m) => {
-        let line = `[${m.category}] ${m.fact}`;
-        if (m.date) line += ` (${m.date})`;
-        if (m.people && m.people.length > 0) line += ` — ${m.people.join(", ")}`;
-        return line;
-      })
-      .join("\n");
+    // Wrap memories with prompt-injection-safe delimiter
+    const memoryContext = buildMemoriesBlock(user.name, memories.slice(0, 20));
 
     const streakInfo = streak
       ? `We've talked ${streak.totalDaysActive} days total. Current streak: ${streak.currentStreak}. Total messages: ${streak.totalMessages}.`
@@ -60,8 +54,7 @@ YOUR PERSONALITY: ${gender === "female" ? "warm, nurturing" : gender === "male" 
 RELATIONSHIP HISTORY:
 ${streakInfo}
 
-EVERYTHING YOU KNOW ABOUT ${user.name.toUpperCase()}:
-${memoryContext}
+EVERYTHING YOU KNOW ABOUT ${user.name.toUpperCase()}:${memoryContext}
 
 Write 3 SHORT journal entries (2-3 sentences each) from different points in your relationship:
 1. An early observation — something you noticed about them when you first started talking

@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId, assertOwnerOfRecord } from "./security";
 
 export const addMemory = mutation({
   args: {
@@ -9,6 +10,7 @@ export const addMemory = mutation({
     people: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     // Duplicate check
     const existing = await ctx.db
       .query("memories")
@@ -49,6 +51,7 @@ export const addMemory = mutation({
 export const getMemories = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -63,6 +66,7 @@ export const getByCategory = query({
     category: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("memories")
       .withIndex("by_user_category", (q) =>
@@ -75,6 +79,8 @@ export const getByCategory = query({
 export const deleteMemory = mutation({
   args: { memoryId: v.id("memories") },
   handler: async (ctx, args) => {
+    const memory = await ctx.db.get(args.memoryId);
+    await assertOwnerOfRecord(ctx, memory);
     await ctx.db.delete(args.memoryId);
   },
 });
@@ -82,6 +88,7 @@ export const deleteMemory = mutation({
 export const clearAll = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const memories = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -96,6 +103,7 @@ export const clearAll = mutation({
 export const getCount = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const memories = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))

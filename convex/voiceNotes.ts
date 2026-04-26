@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId, assertOwnerOfRecord } from "./security";
 
 export const create = mutation({
   args: {
@@ -8,6 +9,7 @@ export const create = mutation({
     type: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db.insert("voiceNotes", {
       userId: args.userId,
       text: args.text,
@@ -21,6 +23,7 @@ export const create = mutation({
 export const getUnlistened = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("voiceNotes")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -33,6 +36,7 @@ export const getUnlistened = query({
 export const getAll = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("voiceNotes")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -44,6 +48,8 @@ export const getAll = query({
 export const markListened = mutation({
   args: { noteId: v.id("voiceNotes") },
   handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.noteId);
+    await assertOwnerOfRecord(ctx, note);
     await ctx.db.patch(args.noteId, { listened: true });
   },
 });

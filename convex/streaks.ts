@@ -1,9 +1,11 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId } from "./security";
 
 export const getStreak = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("streaks")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -14,6 +16,7 @@ export const getStreak = query({
 export const recordActivity = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const today = new Date().toISOString().split("T")[0];
     const existing = await ctx.db
       .query("streaks")
@@ -67,6 +70,7 @@ export const recordActivity = mutation({
 export const getDaysSinceLastActive = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const streak = await ctx.db
       .query("streaks")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))

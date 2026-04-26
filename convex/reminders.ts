@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId, assertOwnerOfRecord } from "./security";
 
 export const create = mutation({
   args: {
@@ -9,6 +10,7 @@ export const create = mutation({
     time: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db.insert("reminders", {
       userId: args.userId,
       text: args.text,
@@ -23,6 +25,7 @@ export const create = mutation({
 export const getUpcoming = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const today = new Date().toISOString().split("T")[0];
     return await ctx.db
       .query("reminders")
@@ -37,6 +40,8 @@ export const getUpcoming = query({
 export const complete = mutation({
   args: { reminderId: v.id("reminders") },
   handler: async (ctx, args) => {
+    const reminder = await ctx.db.get(args.reminderId);
+    await assertOwnerOfRecord(ctx, reminder);
     await ctx.db.patch(args.reminderId, { completed: true });
   },
 });

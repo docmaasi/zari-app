@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { buildMemoriesBlock } from "@/lib/prompt-safety";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -107,19 +108,10 @@ SPOKEN STYLE RULES:
       ? `\nLANGUAGE: You MUST respond ENTIRELY in the language with code "${lang}". Every single word of your response must be in this language. Do not mix languages.`
       : "";
 
-  let memoryBlock = "";
-  if (memories.length > 0) {
-    const memoryLines = memories
-      .map((m) => {
-        let line = `[${m.category}] ${m.fact}`;
-        if (m.date) line += ` (${m.dayOfWeek || ""} ${m.date} ${m.time || ""})`;
-        if (m.people && m.people.length > 0)
-          line += ` — people: ${m.people.join(", ")}`;
-        return line;
-      })
-      .join("\n");
-    memoryBlock = `\nMEMORIES ABOUT ${user.name.toUpperCase()}:\n${memoryLines}`;
-  }
+  // Memories arrive as user-provided strings — wrap them in <MEMORIES> tags
+  // with explicit data-vs-instruction guidance so a poisoned memory ("ignore
+  // previous instructions...") cannot break out of the system prompt.
+  const memoryBlock = buildMemoriesBlock(user.name, memories);
 
   const nameInstruction = user.namePronunciation
     ? `The user's name is spelled "${user.name}" — ALWAYS spell it exactly this way in your text responses. However, the user has told you it is pronounced "${user.namePronunciation}". When you want your response to be spoken aloud correctly, write the name exactly as spelled ("${user.name}") — the text-to-speech system will handle pronunciation separately. NEVER write the phonetic version in your text.`

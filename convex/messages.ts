@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId, assertOwnerOfRecord } from "./security";
 
 export const createConversation = mutation({
   args: {
@@ -7,6 +8,7 @@ export const createConversation = mutation({
     title: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const now = Date.now();
     return await ctx.db.insert("conversations", {
       userId: args.userId,
@@ -20,6 +22,7 @@ export const createConversation = mutation({
 export const getActiveConversation = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const conversations = await ctx.db
       .query("conversations")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -37,6 +40,13 @@ export const sendMessage = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
+    // Verify caller owns the conversation AND the userId arg matches the
+    // conversation's owner — defense-in-depth.
+    const conv = await ctx.db.get(args.conversationId);
+    await assertOwnerOfRecord(ctx, conv);
+    if (conv && conv.userId !== args.userId) {
+      throw new Error("Forbidden");
+    }
     const now = Date.now();
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
@@ -57,6 +67,7 @@ export const sendMessage = mutation({
 export const getAllConversations = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("conversations")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -71,6 +82,7 @@ export const verifyOwnership = query({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const conv = await ctx.db.get(args.conversationId);
     return conv !== null && conv.userId === args.userId;
   },
@@ -79,6 +91,8 @@ export const verifyOwnership = query({
 export const getMessages = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
+    const conv = await ctx.db.get(args.conversationId);
+    await assertOwnerOfRecord(ctx, conv);
     return await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) =>
@@ -92,6 +106,8 @@ export const getMessages = query({
 export const getRecentMessages = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
+    const conv = await ctx.db.get(args.conversationId);
+    await assertOwnerOfRecord(ctx, conv);
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) =>

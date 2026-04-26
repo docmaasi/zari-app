@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId } from "./security";
 
 export const record = mutation({
   args: {
@@ -7,6 +8,7 @@ export const record = mutation({
     mood: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const today = new Date().toISOString().split("T")[0];
 
     // One mood per day — update if exists
@@ -33,6 +35,7 @@ export const record = mutation({
 export const getLast30Days = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("moodHistory")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -44,6 +47,7 @@ export const getLast30Days = query({
 export const getWeekSummary = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const weekStr = weekAgo.toISOString().split("T")[0];

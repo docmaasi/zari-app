@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
+import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { NextResponse } from "next/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -51,14 +52,12 @@ export async function POST() {
     if (hour >= 17 && hour < 21) timeOfDay = "evening";
     if (hour >= 21 || hour < 5) timeOfDay = "late night";
 
-    const memoryContext = memories.length > 0
-      ? memories.slice(0, 15).map((m) => {
-          let line = `[${m.category}] ${m.fact}`;
-          if (m.people && m.people.length > 0) line += ` (people: ${m.people.join(", ")})`;
-          if (m.date) line += ` [date: ${m.date}]`;
-          return line;
-        }).join("\n")
-      : "No memories yet — this is a relatively new user.";
+    // Wrap memories with prompt-injection-safe delimiter; falls back to a
+    // neutral note when there are none so the prompt structure stays stable.
+    const memoryContext =
+      memories.length > 0
+        ? buildMemoriesBlock(user.name, memories.slice(0, 15))
+        : "\nNo memories yet — this is a relatively new user.\n";
 
     const streakInfo = streak
       ? `Current streak: ${streak.currentStreak} days. Longest: ${streak.longestStreak}. Total messages ever: ${streak.totalMessages}. First chat: ${streak.firstChatDate}.`

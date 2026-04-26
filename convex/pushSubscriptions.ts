@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByUserId } from "./security";
 
 export const subscribe = mutation({
   args: {
@@ -9,6 +10,7 @@ export const subscribe = mutation({
     auth: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     // Check for existing subscription with same endpoint
     const existing = await ctx.db
       .query("pushSubscriptions")
@@ -31,6 +33,7 @@ export const subscribe = mutation({
 export const unsubscribe = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const subs = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -45,6 +48,7 @@ export const unsubscribe = mutation({
 export const getSubscriptions = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     return await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))

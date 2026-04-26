@@ -1,6 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByClerkId, assertOwnerByUserId } from "./security";
 
+// Called only from the Clerk webhook (signature-verified) and from authenticated
+// API routes — does not assert identity match because Clerk webhook has no JWT.
 export const upsertUser = mutation({
   args: {
     clerkId: v.string(),
@@ -36,6 +39,7 @@ export const upsertUser = mutation({
 export const getByClerkId = query({
   args: { clerkId: v.string() },
   handler: async (ctx, args) => {
+    await assertOwnerByClerkId(ctx, args.clerkId);
     return await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
@@ -56,6 +60,7 @@ export const updatePreferences = mutation({
     namePronunciation: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const { userId, ...updates } = args;
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, val]) => val !== undefined)

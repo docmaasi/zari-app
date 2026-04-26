@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { wrapUntrustedUserText } from "@/lib/prompt-safety";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const extractionPrompt = `Analyze this message and extract any facts, events, people mentioned, or topics worth remembering about the user. Return a JSON array of memories.
+    const extractionPrompt = `Analyze the user message below and extract any facts, events, people mentioned, or topics worth remembering about the user. Return a JSON array of memories.
 
 Each memory object should have:
 - "category": one of "personal", "interests", "goals", "relationships", "preferences", "events"
@@ -41,7 +42,7 @@ Each memory object should have:
 Only extract meaningful, specific information. Skip greetings, filler, and vague statements.
 If there's nothing worth remembering, return an empty array [].
 
-Message: "${message}"
+${wrapUntrustedUserText(message, "USER_MESSAGE")}
 
 Respond ONLY with valid JSON array, nothing else.`;
 

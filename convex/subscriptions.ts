@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwnerByClerkId, assertOwnerByUserId } from "./security";
 
 // Admin emails that always get full Plus access
 const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
@@ -7,6 +8,7 @@ const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
 export const getSubscription = query({
   args: { clerkId: v.string() },
   handler: async (ctx, args) => {
+    await assertOwnerByClerkId(ctx, args.clerkId);
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
@@ -74,6 +76,7 @@ export const setStripeCustomerId = mutation({
     stripeCustomerId: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertOwnerByClerkId(ctx, args.clerkId);
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
@@ -90,6 +93,7 @@ export const setStripeCustomerId = mutation({
 export const getDailyMessageCount = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     // Use UTC midnight — not perfect for all timezones but consistent
     const startOfDay = new Date();
     startOfDay.setUTCHours(0, 0, 0, 0);
@@ -112,6 +116,7 @@ export const getDailyMessageCount = query({
 export const getDailyVoiceCount = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const today = new Date().toISOString().split("T")[0];
     const record = await ctx.db
       .query("voiceUsage")
@@ -126,6 +131,7 @@ export const getDailyVoiceCount = query({
 export const incrementVoiceCount = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    await assertOwnerByUserId(ctx, args.userId);
     const today = new Date().toISOString().split("T")[0];
     const record = await ctx.db
       .query("voiceUsage")
