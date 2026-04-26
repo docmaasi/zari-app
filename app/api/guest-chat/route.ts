@@ -18,10 +18,36 @@ export async function POST(request: Request) {
   try {
     const { messages } = await request.json();
 
-    if (!messages || messages.length > 8) {
+    if (!Array.isArray(messages) || messages.length > 8) {
       return NextResponse.json(
         { reply: "I'm really enjoying our conversation! To keep going and let me remember everything about you, create a free account. I promise it's worth it.", limitReached: true },
         { status: 200 }
+      );
+    }
+
+    // Reject malformed messages and cap message size — guest chat is unauthenticated
+    // so unbounded input is the easiest token-drain vector.
+    const MAX_MSG_CHARS = 2000;
+    const MAX_TOTAL_CHARS = 8000;
+    let totalChars = 0;
+    for (const m of messages) {
+      if (
+        !m ||
+        typeof m.content !== "string" ||
+        (m.role !== "user" && m.role !== "assistant") ||
+        m.content.length > MAX_MSG_CHARS
+      ) {
+        return NextResponse.json(
+          { error: "invalid_message" },
+          { status: 400 }
+        );
+      }
+      totalChars += m.content.length;
+    }
+    if (totalChars > MAX_TOTAL_CHARS) {
+      return NextResponse.json(
+        { error: "messages_too_long" },
+        { status: 400 }
       );
     }
 

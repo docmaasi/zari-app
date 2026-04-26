@@ -20,6 +20,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No photo" }, { status: 400 });
     }
 
+    // Allowlist MIME and cap size — prevents loading a 100MB file into memory
+    // or sending unsupported content to Claude vision.
+    const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+    if (!ALLOWED_MIME.includes(file.type)) {
+      return NextResponse.json(
+        { error: "unsupported_image", message: "Photo must be JPEG, PNG, WebP, or GIF." },
+        { status: 400 }
+      );
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      return NextResponse.json(
+        { error: "image_too_large", message: "Photos must be under 5 MB." },
+        { status: 413 }
+      );
+    }
+
     const user = await convex.query(api.users.getByClerkId, { clerkId });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

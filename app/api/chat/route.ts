@@ -147,6 +147,23 @@ export async function POST(request: Request) {
 
     const { message, conversationId, vibe } = await request.json();
 
+    // Cap user message length — chat uses Claude Sonnet (highest cost). The daily
+    // count limits *frequency*; this limits *per-call* size, blocking the
+    // single-request token-drain vector.
+    const MAX_USER_MESSAGE_CHARS = 4000;
+    if (typeof message !== "string" || message.length === 0) {
+      return NextResponse.json({ error: "message required" }, { status: 400 });
+    }
+    if (message.length > MAX_USER_MESSAGE_CHARS) {
+      return NextResponse.json(
+        {
+          error: "message_too_long",
+          message: `Messages are limited to ${MAX_USER_MESSAGE_CHARS} characters.`,
+        },
+        { status: 400 }
+      );
+    }
+
     const user = await convex.query(api.users.getByClerkId, { clerkId });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

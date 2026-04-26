@@ -16,9 +16,22 @@ export async function POST(request: Request) {
     }
 
     const { text, voiceId } = await request.json();
-    if (!text || !voiceId) {
+    if (!text || !voiceId || typeof text !== "string" || typeof voiceId !== "string") {
       return NextResponse.json(
         { error: "text and voiceId required" },
+        { status: 400 }
+      );
+    }
+
+    // Cap on characters sent to ElevenLabs — prevents a single request burning
+    // through credits with a multi-page payload.
+    const MAX_TTS_CHARS = 1500;
+    if (text.length > MAX_TTS_CHARS) {
+      return NextResponse.json(
+        {
+          error: "text_too_long",
+          message: `Voice messages are limited to ${MAX_TTS_CHARS} characters.`,
+        },
         { status: 400 }
       );
     }

@@ -14,9 +14,24 @@ export async function POST(request: Request) {
     }
 
     const { priceId } = await request.json();
-    if (!priceId) {
+    if (!priceId || typeof priceId !== "string") {
       return NextResponse.json(
         { error: "Price ID required" },
+        { status: 400 }
+      );
+    }
+
+    // Server-side allowlist — only accept Zari Plus monthly/yearly prices.
+    // Without this, a client could pass any price ID (e.g. a $0 price they create
+    // and then trick the webhook into granting Plus).
+    const ALLOWED_PRICE_IDS = [
+      process.env.STRIPE_PLUS_MONTHLY_PRICE_ID,
+      process.env.STRIPE_PLUS_YEARLY_PRICE_ID,
+    ].filter(Boolean) as string[];
+
+    if (!ALLOWED_PRICE_IDS.includes(priceId)) {
+      return NextResponse.json(
+        { error: "Invalid price" },
         { status: 400 }
       );
     }

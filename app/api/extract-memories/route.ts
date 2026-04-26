@@ -16,6 +16,16 @@ export async function POST(request: Request) {
 
     const { message } = await request.json();
 
+    // Cap input — extract-memories runs on every chat message, so unbounded input
+    // is a per-turn cost-amplifier on top of the chat call itself.
+    const MAX_MESSAGE_CHARS = 4000;
+    if (typeof message !== "string" || message.length === 0) {
+      return NextResponse.json({ count: 0 });
+    }
+    if (message.length > MAX_MESSAGE_CHARS) {
+      return NextResponse.json({ count: 0 });
+    }
+
     const user = await convex.query(api.users.getByClerkId, { clerkId });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
