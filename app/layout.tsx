@@ -3,6 +3,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { ConvexClientProvider } from "@/components/convex-provider";
 import { ServiceWorker } from "@/components/service-worker";
+import { CookieConsent } from "@/components/cookie-consent";
+import { IdleTimeout } from "@/components/idle-timeout";
 import "./globals.css";
 
 const SITE_TITLE = "Zari — AI That Remembers You";
@@ -85,6 +87,8 @@ export default function RootLayout({
         <body>
           <ConvexClientProvider>{children}</ConvexClientProvider>
           <ServiceWorker />
+          <CookieConsent />
+          <IdleTimeout />
         </body>
       </html>
     </ClerkProvider>

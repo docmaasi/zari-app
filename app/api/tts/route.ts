@@ -2,9 +2,16 @@ import { auth } from "@clerk/nextjs/server";
 import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { elevenLabsVoices } from "@/lib/elevenlabs-voices";
 
 const DAILY_VOICE_CAP = 50; // max ElevenLabs messages per day per user
 const ADMIN_EMAILS = ["docmaasi2@gmail.com"];
+
+// Authoritative allowlist of voice IDs this app may use. Built once at
+// module load from the published Zari voice catalog so requests can't
+// reach ElevenLabs with arbitrary (potentially premium-cloned) voice IDs
+// that would bill the ElevenLabs account at unexpected rates.
+const ALLOWED_VOICE_IDS = new Set(elevenLabsVoices.map((v) => v.id));
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +28,17 @@ export async function POST(request: Request) {
     if (!text || !voiceId || typeof text !== "string" || typeof voiceId !== "string") {
       return NextResponse.json(
         { error: "text and voiceId required" },
+        { status: 400 }
+      );
+    }
+
+    // Voice-ID allowlist. Without this, an authenticated user can supply
+    // any valid ElevenLabs voice ID (including premium cloned voices
+    // billed at higher rates) and the server forwards it to
+    // /v1/text-to-speech/${voiceId}, hitting the account's API key.
+    if (!ALLOWED_VOICE_IDS.has(voiceId)) {
+      return NextResponse.json(
+        { error: "invalid_voice_id", message: "Unknown voice." },
         { status: 400 }
       );
     }
