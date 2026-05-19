@@ -39,7 +39,7 @@ const FEATURES: Feature[] = [
   },
   {
     id: "personalities",
-    icon: "💜",
+    icon: "✨",
     title: "3 Personalities",
     shortDesc: "Warm & nurturing, balanced & calm, or bold & direct",
     fullDesc:
@@ -84,7 +84,7 @@ export function FeatureCards() {
             whileTap={{ scale: 0.97 }}
             aria-label={`Learn more about ${f.title}`}
             aria-haspopup="dialog"
-            className="group cursor-pointer p-4 rounded-2xl bg-black/40 border border-white/10 hover:border-zari-accent/60 hover:bg-black/60 backdrop-blur-sm text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#06060e]"
+            className="group cursor-pointer p-4 rounded-2xl bg-black/40 border border-white/10 hover:border-zari-accent/60 hover:bg-black/60 backdrop-blur-sm text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0b12]"
           >
             <span className="text-2xl mb-2 block">{f.icon}</span>
             <h3 className="text-xs font-semibold text-zari-text mb-1">

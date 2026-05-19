@@ -1,11 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
+import { scrubEvent } from "@/lib/sentry-scrub";
+
+const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 Sentry.init({
-  dsn: "https://3bf78caea4a7d0367a07f3e4812a8733@o4511160331075584.ingest.us.sentry.io/4511160459657216",
-
-  // Performance monitoring
+  dsn,
   tracesSampleRate: 1.0,
-
-  // Only send errors in production
-  enabled: process.env.NODE_ENV === "production",
+  enabled: Boolean(dsn) && process.env.NODE_ENV === "production",
+  beforeSend: (event) => scrubEvent(event),
 });

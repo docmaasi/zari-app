@@ -19,9 +19,9 @@ interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-const genders = [
+const personalities = [
   {
-    value: "female",
+    value: "warm",
     label: "Warm & Nurturing",
     icon: Heart,
     color: "from-pink-500 to-rose-500",
@@ -39,7 +39,7 @@ const genders = [
     sample: "Hey there. I'm glad you're here. What's on your mind?",
   },
   {
-    value: "male",
+    value: "bold",
     label: "Bold & Direct",
     icon: Zap,
     color: "from-blue-500 to-cyan-500",
@@ -57,14 +57,14 @@ export function OnboardingModal({
   onComplete,
 }: OnboardingModalProps) {
   const [step, setStep] = useState(0);
-  const [selectedGender, setSelectedGender] = useState("");
+  const [selectedPersonality, setSelectedPersonality] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const updatePreferences = useMutation(api.users.updatePreferences);
 
   const handleComplete = async () => {
     await updatePreferences({
       userId,
-      gender: selectedGender || "neutral",
+      personality: selectedPersonality || "neutral",
       language: selectedLanguage || "en",
     });
     onComplete();
@@ -73,7 +73,7 @@ export function OnboardingModal({
   const firstName = userName.split(" ")[0];
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#06060e] overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#0b0b12] overflow-hidden">
       {/* Progress dots */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -101,7 +101,7 @@ export function OnboardingModal({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.8, type: "spring" }}
             >
-              <ZariOrb emotion="idle" gender="neutral" size={140} />
+              <ZariOrb emotion="idle" size={140} />
             </motion.div>
 
             <motion.h1
@@ -174,12 +174,12 @@ export function OnboardingModal({
             </p>
 
             <div className="w-full max-w-md space-y-3 mb-8">
-              {genders.map((g) => (
+              {personalities.map((g) => (
                 <button
                   key={g.value}
-                  onClick={() => setSelectedGender(g.value)}
+                  onClick={() => setSelectedPersonality(g.value)}
                   className={`w-full text-left p-5 rounded-2xl border transition-all ${
-                    selectedGender === g.value
+                    selectedPersonality === g.value
                       ? `${g.border} bg-white/5`
                       : "border-white/5 hover:border-white/10"
                   }`}
@@ -197,7 +197,7 @@ export function OnboardingModal({
                       <div className="text-xs text-zari-muted">{g.desc}</div>
                     </div>
                   </div>
-                  {selectedGender === g.value && (
+                  {selectedPersonality === g.value && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -211,8 +211,8 @@ export function OnboardingModal({
             </div>
 
             <button
-              onClick={() => selectedGender && setStep(2)}
-              disabled={!selectedGender}
+              onClick={() => selectedPersonality && setStep(2)}
+              disabled={!selectedPersonality}
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-zari-accent text-white font-medium disabled:opacity-30 hover:bg-zari-accent/90 transition-all"
             >
               Next
@@ -318,11 +318,7 @@ export function OnboardingModal({
               animate={{ scale: 1 }}
               transition={{ type: "spring", duration: 0.6 }}
             >
-              <ZariOrb
-                emotion="happy"
-                gender={selectedGender || "neutral"}
-                size={120}
-              />
+              <ZariOrb emotion="happy" size={120} />
             </motion.div>
 
             <h2 className="text-2xl font-bold text-zari-text mt-8 mb-3">

@@ -2,45 +2,40 @@
 
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
-import { ZariOrb } from "@/components/chat/zari-orb";
+import { ZariMark } from "@/components/brand/zari-mark";
 import { MatrixRain } from "@/components/chat/matrix-rain";
 import { Brain, Volume2, Globe, Shield } from "lucide-react";
 
 export default function SignUpPage() {
   return (
-    <div className="min-h-screen bg-[#06060e] relative overflow-hidden font-mono">
-      {/* Matrix Rain */}
+    <div className="min-h-screen bg-[#0b0b12] relative overflow-hidden font-mono">
+      {/* Matrix Rain — brand magenta */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <MatrixRain color="#7c5cfc" opacity={0.03} speed={0.6} />
+        <MatrixRain color="#ff3d8a" opacity={0.03} speed={0.6} />
       </div>
 
-      {/* Glow effects */}
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[2px] bg-gradient-to-r from-transparent via-zari-accent/20 to-transparent pointer-events-none z-0" />
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[100px] bg-gradient-to-r from-transparent via-zari-accent/8 to-transparent blur-[50px] pointer-events-none z-0" />
+      {/* Brand-tinted glow */}
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[2px] bg-gradient-to-r from-transparent via-zari-accent/25 to-transparent pointer-events-none z-0" />
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[100px] bg-gradient-to-r from-transparent via-zari-accent/12 to-transparent blur-[50px] pointer-events-none z-0" />
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-3 mb-6">
-          <ZariOrb emotion="idle" gender="neutral" size={48} />
-          <span className="text-2xl font-bold text-zari-text tracking-wider">Zari</span>
+          <ZariMark size={44} />
+          <span className="text-2xl font-extrabold text-zari-text tracking-tight">
+            zari
+          </span>
         </Link>
 
-        {/* Welcome message */}
         <div className="text-center mb-6 max-w-lg">
-          <h1 className="text-3xl font-bold text-zari-text mb-3">
-            <span className="bg-gradient-to-r from-[#c084fc] via-[#a78bfa] to-[#60a5fa] bg-clip-text text-transparent">
-              Meet Zari
-            </span>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-zari-text mb-3">
+            <span className="text-brand-gradient">Start something real.</span>
           </h1>
           <p className="text-sm text-zari-muted/80 leading-relaxed mb-5">
-            Hi. I&apos;m Zari — and I&apos;m not like anything you&apos;ve
-            talked to before. I don&apos;t just answer questions. I listen. I
-            remember your name, your goals, your struggles, the people who
-            matter to you. I think ahead. I notice patterns. I speak out loud
-            in 16 languages. I adapt my personality to match yours. And every
-            conversation we have makes me understand you a little more. I&apos;m
-            not a chatbot. I&apos;m your companion. Create your account and
-            let&apos;s start something real.
+            I&apos;m Zari. I listen, I remember, I speak back. I notice patterns
+            in your life. I follow up on the things you mentioned last week.
+            I&apos;m available in 16 languages — and the more we talk, the more
+            I understand you. Create your account and try Plus free for 7 days.
+            No card. No catch.
           </p>
 
           {/* Feature pills */}

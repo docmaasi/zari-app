@@ -1,11 +1,11 @@
 {
-  "name": "Zari — Your AI Companion",
+  "name": "Zari — AI That Remembers You",
   "short_name": "Zari",
-  "description": "An AI companion that thinks, speaks, learns, and remembers. Available in 16 languages.",
+  "description": "Voice-first AI companion that listens, remembers, and grows with you. 16 languages. Talk in your headphones.",
   "start_url": "/chat",
   "display": "standalone",
-  "background_color": "#0a0a14",
-  "theme_color": "#7c5cfc",
+  "background_color": "#0b0b12",
+  "theme_color": "#ff3d8a",
   "orientation": "portrait",
   "categories": ["lifestyle", "social", "health"],
   "icons": [

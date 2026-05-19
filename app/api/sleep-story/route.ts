@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -11,6 +13,17 @@ export async function POST() {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("sleep", clerkId),
+      LIMITS.voice.max,
+      LIMITS.voice.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -26,7 +39,8 @@ export async function POST() {
       userId: user._id,
     });
 
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const lang = user.language || "en";
 
     const interests = memories
@@ -37,7 +51,7 @@ export async function POST() {
 
     const prompt = `You are Zari, telling ${user.name} a personalized bedtime story. Speak slowly, calmly, soothingly.
 
-PERSONALITY: ${gender === "female" ? "warm, gentle, like a lullaby" : gender === "male" ? "deep, calm, grounding" : "soft, peaceful, meditative"}
+PERSONALITY: ${personality === "warm" || personality === "female" ? "warm, gentle, like a lullaby" : personality === "bold" || personality === "male" ? "deep, calm, grounding" : "soft, peaceful, meditative"}
 
 USER'S INTERESTS: ${interests || "nature, peace, adventure"}
 
@@ -52,7 +66,7 @@ NO markdown. Written to be spoken aloud. This is for falling asleep.
 ${lang !== "en" ? `Write ENTIRELY in language code "${lang}".` : ""}`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 400,
       messages: [{ role: "user", content: prompt }],
     });
@@ -63,6 +77,7 @@ ${lang !== "en" ? `Write ENTIRELY in language code "${lang}".` : ""}`;
 
     return NextResponse.json({ story });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "sleep-story" } });
     console.error("Sleep story error:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }

@@ -12,14 +12,14 @@ export interface ChatTheme {
 
 export const chatThemes: ChatTheme[] = [
   {
-    id: "matrix-purple",
-    name: "Neon Matrix",
-    description: "Purple rain with falling code",
+    id: "matrix-magenta",
+    name: "Aurora",
+    description: "Hot magenta rain — the Zari signature",
     free: true,
-    matrixColor: "#7c5cfc",
-    matrixOpacity: 0.06,
+    matrixColor: "#ff3d8a",
+    matrixOpacity: 0.05,
     matrixSpeed: 1,
-    bgClass: "bg-[#06060e]",
+    bgClass: "bg-[#0b0b12]",
     fontClass: "font-mono",
   },
   {
@@ -38,7 +38,7 @@ export const chatThemes: ChatTheme[] = [
     name: "Pink Cyber",
     description: "Hot pink digital rain",
     free: false,
-    matrixColor: "#e855a0",
+    matrixColor: "#ff3d8a",
     matrixOpacity: 0.06,
     matrixSpeed: 0.8,
     bgClass: "bg-[#0e060a]",
@@ -49,7 +49,7 @@ export const chatThemes: ChatTheme[] = [
     name: "Ocean Code",
     description: "Deep blue data streams",
     free: false,
-    matrixColor: "#38b2ff",
+    matrixColor: "#5cf1ff",
     matrixOpacity: 0.06,
     matrixSpeed: 0.9,
     bgClass: "bg-[#060a0e]",

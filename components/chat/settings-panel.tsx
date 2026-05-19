@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, Heart, Sparkles, Zap, Crown, ExternalLink, Gift, Copy, Check, ArrowRight, LogOut } from "lucide-react";
+import { X, Settings, Heart, Sparkles, Zap, Crown, ExternalLink, Gift, Copy, Check, ArrowRight, LogOut, Download, Trash2, AlertTriangle } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { languageList } from "@/lib/languages";
@@ -17,28 +17,28 @@ interface SettingsPanelProps {
   userId: Id<"users">;
   currentName: string;
   currentNamePronunciation?: string;
-  currentGender: string;
+  currentPersonality: string;
   currentLanguage: string;
   currentVoiceId?: string;
   onClose: () => void;
 }
 
-const genders = [
-  { value: "female", label: "Warm", icon: Heart, color: "text-zari-pink" },
+const personalities = [
+  { value: "warm", label: "Warm", icon: Heart, color: "text-zari-pink" },
   {
     value: "neutral",
     label: "Balanced",
     icon: Sparkles,
     color: "text-zari-accent",
   },
-  { value: "male", label: "Bold", icon: Zap, color: "text-zari-blue" },
+  { value: "bold", label: "Bold", icon: Zap, color: "text-zari-blue" },
 ];
 
 export function SettingsPanel({
   userId,
   currentName,
   currentNamePronunciation,
-  currentGender,
+  currentPersonality,
   currentLanguage,
   currentVoiceId,
   onClose,
@@ -47,13 +47,16 @@ export function SettingsPanel({
   const [namePronunciation, setNamePronunciation] = useState(
     currentNamePronunciation || ""
   );
-  const [gender, setGender] = useState(currentGender);
+  const [personality, setPersonality] = useState(currentPersonality);
   const [language, setLanguage] = useState(currentLanguage);
   const [voiceId, setVoiceId] = useState(
-    currentVoiceId || getDefaultVoiceId(currentGender)
+    currentVoiceId || getDefaultVoiceId(currentPersonality)
   );
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [orbColor, setOrbColor] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("zari-orb-color") || "purple";
@@ -67,7 +70,7 @@ export function SettingsPanel({
   const { isPlusUser, plan } = useSubscription();
   const { signOut } = useClerk();
   const updatePreferences = useMutation(api.users.updatePreferences);
-  const availableVoices = getVoicesForGender(gender);
+  const availableVoices = getVoicesForGender(personality);
 
   const handleSave = async () => {
     setSaving(true);
@@ -75,12 +78,45 @@ export function SettingsPanel({
       userId,
       name,
       namePronunciation: namePronunciation || undefined,
-      gender,
+      personality,
       language,
       voiceId,
     });
     setSaving(false);
     window.location.reload();
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/account/export");
+      if (!res.ok) throw new Error("export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `zari-data-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Could not export your data. Please try again or email support@zari.help.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      if (!res.ok) throw new Error("delete failed");
+      await signOut({ redirectUrl: "/" });
+    } catch {
+      setDeleting(false);
+      alert("Could not delete your account. Please email support@zari.help and we'll handle it.");
+    }
   };
 
   return (
@@ -160,19 +196,19 @@ export function SettingsPanel({
             Zari&apos;s Personality
           </label>
           <div className="flex gap-2">
-            {genders.map((g) => (
+            {personalities.map((p) => (
               <button
-                key={g.value}
-                onClick={() => setGender(g.value)}
+                key={p.value}
+                onClick={() => setPersonality(p.value)}
                 className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-                  gender === g.value
+                  personality === p.value
                     ? "border-zari-accent bg-zari-accent/10"
                     : "border-white/5 hover:border-white/10"
                 }`}
               >
-                <g.icon className={`w-5 h-5 ${g.color}`} />
+                <p.icon className={`w-5 h-5 ${p.color}`} />
                 <span className="text-xs font-medium text-zari-text">
-                  {g.label}
+                  {p.label}
                 </span>
               </button>
             ))}
@@ -297,9 +333,9 @@ export function SettingsPanel({
           </label>
           <div className="flex flex-wrap gap-2">
             {[
-              { value: "purple", color: "bg-gradient-to-br from-[#7c5cfc] to-[#a78bfa]" },
-              { value: "pink", color: "bg-gradient-to-br from-[#e855a0] to-[#ff6b9d]" },
-              { value: "blue", color: "bg-gradient-to-br from-[#38b2ff] to-[#60d5fa]" },
+              { value: "purple", color: "bg-gradient-to-br from-[#ff3d8a] to-[#ff7eb1]" },
+              { value: "pink", color: "bg-gradient-to-br from-[#ff3d8a] to-[#ff6b9d]" },
+              { value: "blue", color: "bg-gradient-to-br from-[#5cf1ff] to-[#60d5fa]" },
               { value: "green", color: "bg-gradient-to-br from-[#10b981] to-[#34d399]" },
               { value: "gold", color: "bg-gradient-to-br from-[#f59e0b] to-[#fbbf24]" },
               { value: "red", color: "bg-gradient-to-br from-[#ef4444] to-[#f87171]" },
@@ -371,7 +407,90 @@ export function SettingsPanel({
             )}
           </div>
         </div>
+
+        {/* Your data — export & delete */}
+        <div>
+          <label className="block text-sm font-medium text-zari-text mb-3">
+            Your Data
+          </label>
+          <div className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3">
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-zari-surface2 hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              <div className="flex items-center gap-2">
+                <Download className="w-4 h-4 text-zari-muted" />
+                <span className="text-sm text-zari-text">
+                  {exporting ? "Preparing..." : "Download my data"}
+                </span>
+              </div>
+              <span className="text-[10px] text-zari-muted/60">JSON</span>
+            </button>
+
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-zari-surface2 hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 className="w-4 h-4 text-red-400/80" />
+              <span className="text-sm text-red-400/90">Delete my account</span>
+            </button>
+
+            <p className="text-[11px] text-zari-muted/60 leading-relaxed">
+              Exporting downloads every memory, conversation, mood entry, and
+              setting Zari has for you. Deleting removes all of it — Zari will
+              forget you completely. This cannot be undone.
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-zari-surface border border-red-500/30 rounded-2xl p-6 max-w-sm w-full"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                </div>
+              </div>
+              <h3 className="text-base font-semibold text-zari-text text-center mb-2">
+                Delete your account?
+              </h3>
+              <p className="text-xs text-zari-muted text-center mb-5 leading-relaxed">
+                This permanently removes all your memories, conversations,
+                journal entries, and settings. Zari will not remember you.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm text-zari-muted hover:text-zari-text transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-xl bg-red-500/80 text-white text-sm font-medium hover:bg-red-500 transition-colors disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Delete forever"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="p-4 border-t border-white/5">
         <button

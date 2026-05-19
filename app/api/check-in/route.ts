@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -11,6 +13,14 @@ export async function POST() {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("checkin", clerkId),
+      LIMITS.proactive.max,
+      LIMITS.proactive.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ greeting: null, skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -34,7 +44,8 @@ export async function POST() {
       : [];
 
     const lang = user.language || "en";
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const now = new Date();
     const hour = now.getHours();
     const dayOfWeek = [
@@ -58,7 +69,7 @@ export async function POST() {
 
 Context:
 - It's ${dayOfWeek} ${timeOfDay}
-- Personality style: ${gender === "female" ? "warm/nurturing" : gender === "male" ? "bold/direct" : "balanced/friendly"}
+- Personality style: ${personality === "warm" || personality === "female" ? "warm/nurturing" : personality === "bold" || personality === "male" ? "bold/direct" : "balanced/friendly"}
 - User memories:\n${memoryContext}
 
 Rules:
@@ -69,7 +80,7 @@ Rules:
 ${lang !== "en" ? `- Respond ENTIRELY in the language with code "${lang}"` : ""}`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
       messages: [{ role: "user", content: prompt }],
     });
@@ -81,6 +92,7 @@ ${lang !== "en" ? `- Respond ENTIRELY in the language with code "${lang}"` : ""}
 
     return NextResponse.json({ greeting });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "check-in" } });
     console.error("Check-in error:", error);
     return NextResponse.json({ greeting: null });
   }

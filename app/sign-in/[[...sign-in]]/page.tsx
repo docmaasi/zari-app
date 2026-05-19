@@ -2,15 +2,15 @@
 
 import { SignIn } from "@clerk/nextjs";
 import Link from "next/link";
-import { ZariOrb } from "@/components/chat/zari-orb";
+import { ZariMark } from "@/components/brand/zari-mark";
 import { MatrixRain } from "@/components/chat/matrix-rain";
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen bg-[#06060e] relative overflow-hidden font-mono">
+    <div className="min-h-screen bg-[#0b0b12] relative overflow-hidden font-mono">
       {/* Matrix Rain */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <MatrixRain color="#7c5cfc" opacity={0.03} speed={0.6} />
+        <MatrixRain color="#ff3d8a" opacity={0.03} speed={0.6} />
       </div>
 
       {/* Glow effects */}
@@ -18,16 +18,16 @@ export default function SignInPage() {
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[400px] h-[100px] bg-gradient-to-r from-transparent via-zari-accent/8 to-transparent blur-[50px] pointer-events-none z-0" />
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-3 mb-6">
-          <ZariOrb emotion="idle" gender="neutral" size={48} />
-          <span className="text-2xl font-bold text-zari-text tracking-wider">Zari</span>
+          <ZariMark size={44} />
+          <span className="text-2xl font-extrabold text-zari-text tracking-tight">
+            zari
+          </span>
         </Link>
 
-        {/* Welcome message */}
         <div className="text-center mb-8 max-w-md">
-          <h1 className="text-3xl font-bold text-zari-text mb-3">
-            Welcome Back
+          <h1 className="text-3xl md:text-4xl font-extrabold text-zari-text mb-3">
+            <span className="text-brand-gradient">Welcome back.</span>
           </h1>
           <p className="text-sm text-zari-muted/80 leading-relaxed">
             I&apos;ve been here, thinking about our last conversation.

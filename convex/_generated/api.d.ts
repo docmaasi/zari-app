@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as journal from "../journal.js";
 import type * as memories from "../memories.js";
 import type * as messages from "../messages.js";
 import type * as moodHistory from "../moodHistory.js";
@@ -26,6 +27,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  journal: typeof journal;
   memories: typeof memories;
   messages: typeof messages;
   moodHistory: typeof moodHistory;

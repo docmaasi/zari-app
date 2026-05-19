@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -11,6 +13,17 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("voice", clerkId),
+      LIMITS.voice.max,
+      LIMITS.voice.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -31,7 +44,8 @@ export async function POST(request: Request) {
       userId: user._id,
     });
 
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const lang = user.language || "en";
     const now = new Date();
     const hour = now.getHours();
@@ -59,7 +73,7 @@ export async function POST(request: Request) {
 
     const prompt = `You are Zari, leaving a VOICE NOTE for ${user.name}. This is audio — speak naturally, conversationally.
 
-Personality: ${gender === "female" ? "warm, nurturing" : gender === "male" ? "bold, direct" : "balanced, thoughtful"}
+Personality: ${personality === "warm" || personality === "female" ? "warm, nurturing" : personality === "bold" || personality === "male" ? "bold, direct" : "balanced, thoughtful"}
 Time: ${timeOfDay}
 ${streakInfo}
 
@@ -78,7 +92,7 @@ ${lang !== "en" ? `- Speak ENTIRELY in language code "${lang}"` : ""}
 Generate the voice note text only. Nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
       messages: [{ role: "user", content: prompt }],
     });
@@ -98,10 +112,11 @@ Generate the voice note text only. Nothing else.`;
       type: type || "checkin",
     });
 
-    // Generate audio via ElevenLabs
+    // Generate audio via ElevenLabs — voice picked from personality (with
+    // legacy gender values mapped through).
     const voiceId = user.voiceId || (
-      gender === "female" ? "cgSgspJ2msm6clMCkdW9" :
-      gender === "male" ? "IKne3meq5aSn9XLyUdCD" :
+      personality === "warm" || personality === "female" ? "cgSgspJ2msm6clMCkdW9" :
+      personality === "bold" || personality === "male" ? "IKne3meq5aSn9XLyUdCD" :
       "EXAVITQu4vr4xnSDxMaL"
     );
 
@@ -149,6 +164,7 @@ Generate the voice note text only. Nothing else.`;
 
     return NextResponse.json({ noteId, text });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "voice-note" } });
     console.error("Voice note error:", error);
     return NextResponse.json(
       { error: "Failed to generate voice note" },

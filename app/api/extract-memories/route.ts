@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { wrapUntrustedUserText } from "@/lib/prompt-safety";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -12,6 +14,14 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("extract", clerkId),
+      LIMITS.extract.max,
+      LIMITS.extract.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ count: 0, skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -60,7 +70,7 @@ ${wrapUntrustedUserText(message, "USER_MESSAGE")}
 Respond ONLY with valid JSON array, nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 500,
       messages: [{ role: "user", content: extractionPrompt }],
     });
@@ -99,6 +109,7 @@ Respond ONLY with valid JSON array, nothing else.`;
 
     return NextResponse.json({ count: savedCount });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "extract-memories" } });
     console.error("Memory extraction error:", error);
     return NextResponse.json(
       { error: "Failed to extract memories" },
