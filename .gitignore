@@ -7,3 +7,6 @@ out
 .env*.local
 playwright-report/
 test-results/
+tmp-tools/
+tmp-*.png
+tmp-*.html
