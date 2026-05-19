@@ -7,7 +7,7 @@ import { getAuthenticatedConvex } from "@/lib/convex-server";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
@@ -27,6 +27,19 @@ export async function POST() {
       userId: user._id,
     });
 
+    // Return cached entries if recent (7-day TTL) — saves Haiku calls and keeps
+    // entries stable for the user. Cache is busted by `force` param.
+    const url = new URL(request.url);
+    const force = url.searchParams.get("force") === "1";
+    const cached = await convex.query(api.journal.getCached, { userId: user._id });
+    if (cached && !cached.stale && !force) {
+      try {
+        return NextResponse.json({ entries: JSON.parse(cached.entries) });
+      } catch {
+        // fall through and regenerate
+      }
+    }
+
     if (memories.length < 3) {
       return NextResponse.json({
         entries: [
@@ -42,8 +55,8 @@ export async function POST() {
       userId: user._id,
     });
 
-    const gender = user.gender || "neutral";
-    // Wrap memories with prompt-injection-safe delimiter
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const memoryContext = buildMemoriesBlock(user.name, memories.slice(0, 20));
 
     const streakInfo = streak
@@ -52,7 +65,7 @@ export async function POST() {
 
     const prompt = `You are Zari, writing in your PRIVATE JOURNAL about ${user.name}. This is YOUR perspective — your thoughts, observations, feelings about this person. Write as if no one will ever read this (but they will — that's the magic).
 
-YOUR PERSONALITY: ${gender === "female" ? "warm, nurturing" : gender === "male" ? "bold, direct" : "balanced, thoughtful"}
+YOUR PERSONALITY: ${personality === "warm" || personality === "female" ? "warm, nurturing" : personality === "bold" || personality === "male" ? "bold, direct" : "balanced, thoughtful"}
 
 RELATIONSHIP HISTORY:
 ${streakInfo}
@@ -77,7 +90,7 @@ RULES:
 Return ONLY valid JSON array. Nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 600,
       messages: [{ role: "user", content: prompt }],
     });
@@ -89,6 +102,16 @@ Return ONLY valid JSON array. Nothing else.`;
       entries = JSON.parse(text);
     } catch {
       entries = [{ text: "I'm still getting to know you. Give me a little more time.", mood: "curious" }];
+    }
+
+    // Cache so we don't pay for Haiku on every visit to /journal or chat card.
+    try {
+      await convex.mutation(api.journal.setCached, {
+        userId: user._id,
+        entries: JSON.stringify(entries),
+      });
+    } catch {
+      // Non-fatal — cache failure should not break the response.
     }
 
     return NextResponse.json({ entries });

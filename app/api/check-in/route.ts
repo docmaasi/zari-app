@@ -34,7 +34,8 @@ export async function POST() {
       : [];
 
     const lang = user.language || "en";
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const now = new Date();
     const hour = now.getHours();
     const dayOfWeek = [
@@ -58,7 +59,7 @@ export async function POST() {
 
 Context:
 - It's ${dayOfWeek} ${timeOfDay}
-- Personality style: ${gender === "female" ? "warm/nurturing" : gender === "male" ? "bold/direct" : "balanced/friendly"}
+- Personality style: ${personality === "warm" || personality === "female" ? "warm/nurturing" : personality === "bold" || personality === "male" ? "bold/direct" : "balanced/friendly"}
 - User memories:\n${memoryContext}
 
 Rules:
@@ -69,7 +70,7 @@ Rules:
 ${lang !== "en" ? `- Respond ENTIRELY in the language with code "${lang}"` : ""}`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
       messages: [{ role: "user", content: prompt }],
     });

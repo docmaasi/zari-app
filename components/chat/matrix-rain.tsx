@@ -12,7 +12,7 @@ const CHARS =
   "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFZARI";
 
 export function MatrixRain({
-  color = "#7c5cfc",
+  color = "#ff3d8a",
   opacity = 0.06,
   speed = 1,
 }: MatrixRainProps) {

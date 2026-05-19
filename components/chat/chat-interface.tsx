@@ -47,6 +47,9 @@ import { MatrixRain } from "./matrix-rain";
 import { ZariOrb } from "./zari-orb";
 import { PwaInstallButton } from "@/components/pwa-install";
 import { MoodPicker } from "./mood-picker";
+import { CrisisBanner } from "@/components/safety/crisis-banner";
+import type { CrisisLevel } from "@/lib/crisis-detection";
+import { JournalCard } from "./journal-card";
 import {
   isVoiceInputSupported,
   startListening,
@@ -57,6 +60,7 @@ interface ChatInterfaceProps {
   user: {
     _id: Id<"users">;
     name: string;
+    personality?: string;
     gender?: string;
     language?: string;
     voiceEnabled?: boolean;
@@ -113,7 +117,10 @@ function getOrbEmotion(status: Status, gender: string) {
 
 export function ChatInterface({ user }: ChatInterfaceProps) {
   const lang = getLanguage(user.language || "en");
-  const gender = user.gender || "neutral";
+  const personality = user.personality || user.gender || "neutral";
+  // ZariOrb's visual prop is still called `gender` (color logic) — pass the
+  // personality value through.
+  const gender = personality;
   const { isPlusUser } = useSubscription();
   const elevenLabsVoiceId = user.voiceId || getDefaultVoiceId(gender);
 
@@ -159,9 +166,9 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [hasMic] = useState(() => isVoiceInputSupported());
   const [themeId] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("zari-theme") || "matrix-purple";
+      return localStorage.getItem("zari-theme") || "matrix-magenta";
     }
-    return "matrix-purple";
+    return "matrix-magenta";
   });
   const [localMessages, setLocalMessages] = useState<
     Array<{ role: string; content: string; id: string }>
@@ -177,6 +184,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [showBreathing, setShowBreathing] = useState(false);
   const [sessionVibe, setSessionVibe] = useState("");
   const [showAmbient, setShowAmbient] = useState(false);
+  const [crisisLevel, setCrisisLevel] = useState<Exclude<CrisisLevel, "none"> | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,6 +374,9 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
               )
             );
           }
+          if (json.crisis && json.crisis !== "none") {
+            setCrisisLevel(json.crisis as Exclude<CrisisLevel, "none">);
+          }
           if (json.done) break;
         }
       }
@@ -452,6 +463,13 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
     <div className={`h-screen-safe flex flex-col relative overflow-hidden ${theme.bgClass} ${theme.fontClass}`}>
       {/* Connection status */}
       <ConnectionStatus />
+
+      {/* Crisis hotline banner — appears when crisis detected in user input */}
+      <AnimatePresence>
+        {crisisLevel && (
+          <CrisisBanner level={crisisLevel} onDismiss={() => setCrisisLevel(null)} />
+        )}
+      </AnimatePresence>
 
       {/* Matrix Rain Background */}
       <MatrixRain
@@ -601,6 +619,9 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
                 </span>
               </motion.div>
             )}
+
+            {/* Zari's Journal — when there's a fresh unseen entry */}
+            {isPlusUser && <JournalCard userId={user._id} />}
 
             {/* Mood Picker */}
             <div className="mb-6 max-w-md">
@@ -843,7 +864,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             userId={user._id}
             currentName={user.name}
             currentNamePronunciation={user.namePronunciation}
-            currentGender={gender}
+            currentPersonality={personality}
             currentLanguage={user.language || "en"}
             currentVoiceId={user.voiceId}
             onClose={() => setShowSettings(false)}

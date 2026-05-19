@@ -7,19 +7,26 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     imageUrl: v.optional(v.string()),
+    // Personality field — replaces `gender`. Values: "warm" | "neutral" | "bold".
+    // `gender` kept for read fallback during transition; new writes set both.
+    personality: v.optional(v.string()),
     gender: v.optional(v.string()),
     language: v.optional(v.string()),
     mood: v.optional(v.string()),
     voiceEnabled: v.optional(v.boolean()),
-    voiceId: v.optional(v.string()), // ElevenLabs voice ID
-    namePronunciation: v.optional(v.string()), // Phonetic spelling for TTS
-    orbColor: v.optional(v.string()), // Custom orb color
+    voiceId: v.optional(v.string()),
+    namePronunciation: v.optional(v.string()),
+    orbColor: v.optional(v.string()),
     createdAt: v.number(),
+    // Age confirmation — required at signup, stored as ISO timestamp of confirm.
+    ageConfirmedAt: v.optional(v.number()),
+    // 7-day Plus trial granted at signup; set by webhook on user.created.
+    trialEndsAt: v.optional(v.number()),
     // Subscription fields
     stripeCustomerId: v.optional(v.string()),
     subscriptionId: v.optional(v.string()),
-    subscriptionStatus: v.optional(v.string()), // "active", "canceled", "past_due", "free"
-    plan: v.optional(v.string()), // "free", "plus_monthly", "plus_yearly"
+    subscriptionStatus: v.optional(v.string()),
+    plan: v.optional(v.string()),
     planExpiresAt: v.optional(v.number()),
   })
     .index("by_clerk_id", ["clerkId"])
@@ -106,12 +113,22 @@ export default defineSchema({
     p256dh: v.string(),
     auth: v.string(),
     createdAt: v.number(),
+    lastNotifiedAt: v.optional(v.number()),
   }).index("by_user", ["userId"]),
 
   voiceUsage: defineTable({
     userId: v.id("users"),
-    date: v.string(), // "2026-04-02"
+    date: v.string(),
     count: v.number(),
   })
     .index("by_user_date", ["userId", "date"]),
+
+  // Cached Zari's-Journal entries so we don't re-generate on every visit.
+  // Re-generated weekly; latest entries shown in chat as a "Zari wrote about you" card.
+  zariJournal: defineTable({
+    userId: v.id("users"),
+    entries: v.string(),
+    generatedAt: v.number(),
+    seenInChatAt: v.optional(v.number()),
+  }).index("by_user", ["userId"]),
 });

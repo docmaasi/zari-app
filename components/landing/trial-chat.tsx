@@ -159,7 +159,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#06060e] rounded-t-3xl sm:rounded-3xl border border-white/10 w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden"
+        className="bg-[#0b0b12] rounded-t-3xl sm:rounded-3xl border border-white/10 w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">

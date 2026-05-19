@@ -57,14 +57,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const lang = user.language || "en";
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
     const mediaType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 300,
       messages: [
         {
@@ -77,8 +78,8 @@ export async function POST(request: Request) {
             {
               type: "text",
               text: `You are Zari, ${user.name}'s AI companion. ${
-                gender === "female" ? "Warm and nurturing." :
-                gender === "male" ? "Bold and direct." :
+                personality === "warm" || personality === "female" ? "Warm and nurturing." :
+                personality === "bold" || personality === "male" ? "Bold and direct." :
                 "Balanced and thoughtful."
               }
 

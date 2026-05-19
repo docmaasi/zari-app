@@ -31,7 +31,8 @@ export async function POST(request: Request) {
       userId: user._id,
     });
 
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const lang = user.language || "en";
     const now = new Date();
     const hour = now.getHours();
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
 
     const prompt = `You are Zari, leaving a VOICE NOTE for ${user.name}. This is audio — speak naturally, conversationally.
 
-Personality: ${gender === "female" ? "warm, nurturing" : gender === "male" ? "bold, direct" : "balanced, thoughtful"}
+Personality: ${personality === "warm" || personality === "female" ? "warm, nurturing" : personality === "bold" || personality === "male" ? "bold, direct" : "balanced, thoughtful"}
 Time: ${timeOfDay}
 ${streakInfo}
 
@@ -78,7 +79,7 @@ ${lang !== "en" ? `- Speak ENTIRELY in language code "${lang}"` : ""}
 Generate the voice note text only. Nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
       messages: [{ role: "user", content: prompt }],
     });

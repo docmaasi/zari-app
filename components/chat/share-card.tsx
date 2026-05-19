@@ -31,7 +31,7 @@ export function ShareCard({ message, userName, onClose }: ShareCardProps) {
     try {
       const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(card, {
-        backgroundColor: "#06060e",
+        backgroundColor: "#0b0b12",
         scale: 2,
       });
       const link = document.createElement("a");
@@ -61,7 +61,7 @@ export function ShareCard({ message, userName, onClose }: ShareCardProps) {
         {/* The shareable card */}
         <div
           ref={cardRef}
-          className="bg-gradient-to-br from-[#0a0a1a] via-[#14142a] to-[#1a0a2a] rounded-3xl p-8 border border-white/10 mb-4"
+          className="bg-gradient-to-br from-[#0a0a1a] via-[#16161f] to-[#1a0a2a] rounded-3xl p-8 border border-white/10 mb-4"
         >
           <div className="flex items-center gap-2 mb-6">
             <ZariLogo size={28} />

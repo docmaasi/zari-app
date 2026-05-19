@@ -2,26 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap");
+/* Inter for body, JetBrains Mono for accents/code. font-display:swap is set
+   automatically by Google CSS for the next/font replacement — but using the
+   raw CDN form here keeps the original setup. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap");
 
 @layer base {
+  :root {
+    /* Brand color tokens — kept here so non-tailwind contexts (Clerk theming,
+       SVG fill="currentColor", embed scripts) can read them via CSS vars. */
+    --zari-bg: #0b0b12;
+    --zari-surface: #16161f;
+    --zari-surface2: #1f1f2c;
+    --zari-accent: #ff3d8a;
+    --zari-accent-light: #ff7eb1;
+    --zari-violet: #b14aff;
+    --zari-blue: #5cf1ff;
+    --zari-peach: #ffcb6b;
+    --zari-text: #f7f7fb;
+    --zari-muted: #7e7e92;
+  }
+
   body {
     @apply bg-zari-bg text-zari-text font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Mobile safe area padding */
+  /* Selection in brand color */
+  ::selection {
+    background: rgba(255, 61, 138, 0.35);
+    color: #ffffff;
+  }
+
+  /* Mobile safe-area paddings */
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-
   .safe-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
 
   /* Prevent zoom on input focus (iOS) */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
 
@@ -35,9 +63,31 @@
   .glass {
     @apply bg-white/5 backdrop-blur-xl border border-white/10;
   }
+
+  /* Brand gradient text — `bg-clip-text` on the linear brand gradient */
+  .text-brand-gradient {
+    background: linear-gradient(120deg, #ff3d8a 0%, #b14aff 50%, #5cf1ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Brand glow — drop-shadow for orb/CTA emphasis */
+  .glow-brand {
+    box-shadow:
+      0 0 0 1px rgba(255, 61, 138, 0.2),
+      0 8px 32px rgba(255, 61, 138, 0.25),
+      0 16px 80px rgba(177, 74, 255, 0.15);
+  }
+
+  /* Animated gradient bg — pairs with `animate-brand-pan` and a 200% bg-size */
+  .bg-zari-brand-animated {
+    background: linear-gradient(120deg, #ff3d8a 0%, #b14aff 50%, #5cf1ff 100%);
+    background-size: 200% 200%;
+  }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — brand-tinted */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -47,16 +97,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 252, 0.3);
+  background: rgba(255, 61, 138, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 92, 252, 0.5);
+  background: rgba(255, 61, 138, 0.55);
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 92, 252, 0.3) transparent;
+  scrollbar-color: rgba(255, 61, 138, 0.3) transparent;
 }

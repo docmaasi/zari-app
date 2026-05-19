@@ -55,3 +55,52 @@ export const getSubscriptions = query({
       .collect();
   },
 });
+
+// Internal — listed via system-token API route. Returns Plus/trial users with
+// push subs who haven't been pinged in the past 24h. The cron then picks who
+// actually gets a message via Haiku and web-push.
+export const listOutreachCandidates = query({
+  args: { secret: v.string() },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CRON_SECRET) {
+      throw new Error("Forbidden");
+    }
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const subs = await ctx.db.query("pushSubscriptions").collect();
+    const fresh = subs.filter(
+      (s) => !s.lastNotifiedAt || s.lastNotifiedAt < cutoff
+    );
+    return fresh;
+  },
+});
+
+export const markNotified = mutation({
+  args: {
+    secret: v.string(),
+    subscriptionId: v.id("pushSubscriptions"),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CRON_SECRET) {
+      throw new Error("Forbidden");
+    }
+    await ctx.db.patch(args.subscriptionId, { lastNotifiedAt: Date.now() });
+  },
+});
+
+export const deleteByEndpoint = mutation({
+  args: {
+    secret: v.string(),
+    endpoint: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.secret !== process.env.CRON_SECRET) {
+      throw new Error("Forbidden");
+    }
+    const subs = await ctx.db.query("pushSubscriptions").collect();
+    for (const s of subs) {
+      if (s.endpoint === args.endpoint) {
+        await ctx.db.delete(s._id);
+      }
+    }
+  },
+});

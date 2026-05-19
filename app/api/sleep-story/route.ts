@@ -26,7 +26,8 @@ export async function POST() {
       userId: user._id,
     });
 
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const lang = user.language || "en";
 
     const interests = memories
@@ -37,7 +38,7 @@ export async function POST() {
 
     const prompt = `You are Zari, telling ${user.name} a personalized bedtime story. Speak slowly, calmly, soothingly.
 
-PERSONALITY: ${gender === "female" ? "warm, gentle, like a lullaby" : gender === "male" ? "deep, calm, grounding" : "soft, peaceful, meditative"}
+PERSONALITY: ${personality === "warm" || personality === "female" ? "warm, gentle, like a lullaby" : personality === "bold" || personality === "male" ? "deep, calm, grounding" : "soft, peaceful, meditative"}
 
 USER'S INTERESTS: ${interests || "nature, peace, adventure"}
 
@@ -52,7 +53,7 @@ NO markdown. Written to be spoken aloud. This is for falling asleep.
 ${lang !== "en" ? `Write ENTIRELY in language code "${lang}".` : ""}`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 400,
       messages: [{ role: "user", content: prompt }],
     });

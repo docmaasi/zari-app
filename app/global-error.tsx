@@ -23,8 +23,8 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          background: "#14142a",
-          color: "#e8e8f0",
+          background: "#16161f",
+          color: "#f7f7fb",
           fontFamily: "system-ui, sans-serif",
         }}>
           <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
@@ -34,7 +34,7 @@ export default function GlobalError({
             onClick={() => reset()}
             style={{
               padding: "0.75rem 1.5rem",
-              background: "#7c5cfc",
+              background: "#ff3d8a",
               color: "white",
               border: "none",
               borderRadius: "0.5rem",
