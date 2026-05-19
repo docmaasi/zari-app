@@ -16,6 +16,7 @@ import type * as referrals from "../referrals.js";
 import type * as reminders from "../reminders.js";
 import type * as streaks from "../streaks.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as userData from "../userData.js";
 import type * as users from "../users.js";
 import type * as voiceNotes from "../voiceNotes.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   reminders: typeof reminders;
   streaks: typeof streaks;
   subscriptions: typeof subscriptions;
+  userData: typeof userData;
   users: typeof users;
   voiceNotes: typeof voiceNotes;
 }>;
