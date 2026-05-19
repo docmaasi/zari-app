@@ -15,6 +15,10 @@ import {
 import Link from "next/link";
 import { speakSmooth, stopSmooth } from "@/lib/tts-enhanced";
 import {
+  speakElevenLabsGuest,
+  stopElevenLabsGuest,
+} from "@/lib/tts-elevenlabs-guest";
+import {
   isVoiceInputSupported,
   startListening,
   stopListening,
@@ -42,6 +46,18 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // ElevenLabs first, browser TTS only if it fails. Mirrors the main chat's
+  // policy so trial visitors hear the real Zari voice, not synthesized robotic.
+  const speakGuest = async (text: string, onEnd: () => void) => {
+    const ok = await speakElevenLabsGuest(text, onEnd);
+    if (!ok) speakSmooth(text, "en-US", "warm", onEnd);
+  };
+
+  const stopAllSpeech = () => {
+    stopElevenLabsGuest();
+    stopSmooth();
+  };
+
   useEffect(() => {
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -62,7 +78,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         setMessages([{ role: "assistant", content: greeting }]);
         if (voiceOn) {
           setIsSpeaking(true);
-          speakSmooth(greeting, "en-US", "female", () => setIsSpeaking(false));
+          speakGuest(greeting, () => setIsSpeaking(false));
         }
       } catch {
         setMessages([
@@ -96,7 +112,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
     const updated = [...messages, userMsg];
     setMessages(updated);
     setLoading(true);
-    stopSmooth();
+    stopAllSpeech();
 
     try {
       const res = await fetch("/api/guest-chat", {
@@ -117,9 +133,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         ]);
         if (voiceOn) {
           setIsSpeaking(true);
-          speakSmooth(data.reply, "en-US", "female", () =>
-            setIsSpeaking(false)
-          );
+          speakGuest(data.reply, () => setIsSpeaking(false));
         }
       }
       if (data.limitReached) {
@@ -220,7 +234,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
             <button
               onClick={() => {
                 setVoiceOn(!voiceOn);
-                if (voiceOn) stopSmooth();
+                if (voiceOn) stopAllSpeech();
               }}
               className={`p-2 rounded-xl transition-colors ${
                 voiceOn
@@ -237,7 +251,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
             </button>
             <button
               onClick={() => {
-                stopSmooth();
+                stopAllSpeech();
                 stopListening();
                 onClose();
               }}
