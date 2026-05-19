@@ -183,14 +183,17 @@ export function speakSmooth(
     const voice = findBestVoice(lang);
     if (voice) utterance.voice = voice;
 
-    // Natural-sounding parameters — avoid extreme pitch shifts
+    // Natural-sounding parameters — avoid extreme pitch shifts.
+    // Accepts both new personality values (warm/bold) and legacy (female/male).
     switch (gender) {
+      case "warm":
       case "female":
         utterance.pitch = 1.05;
         utterance.rate = 0.95;
         break;
+      case "bold":
       case "male":
-        utterance.pitch = 0.95; // Subtle, not robotic
+        utterance.pitch = 0.95;
         utterance.rate = 0.95;
         break;
       default:

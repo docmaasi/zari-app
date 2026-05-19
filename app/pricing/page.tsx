@@ -84,10 +84,10 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06060e] font-mono relative overflow-hidden">
+    <div className="min-h-screen bg-[#0b0b12] font-mono relative overflow-hidden">
       {/* Matrix Rain */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <MatrixRain color="#7c5cfc" opacity={0.025} speed={0.5} />
+        <MatrixRain color="#ff3d8a" opacity={0.025} speed={0.5} />
       </div>
 
       {/* Nav */}

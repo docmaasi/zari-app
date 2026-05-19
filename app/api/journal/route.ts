@@ -1,17 +1,27 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("journal", clerkId),
+      LIMITS.journal.max,
+      LIMITS.journal.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ entries: [], skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -26,6 +36,19 @@ export async function POST() {
     const memories = await convex.query(api.memories.getMemories, {
       userId: user._id,
     });
+
+    // Return cached entries if recent (7-day TTL) — saves Haiku calls and keeps
+    // entries stable for the user. Cache is busted by `force` param.
+    const url = new URL(request.url);
+    const force = url.searchParams.get("force") === "1";
+    const cached = await convex.query(api.journal.getCached, { userId: user._id });
+    if (cached && !cached.stale && !force) {
+      try {
+        return NextResponse.json({ entries: JSON.parse(cached.entries) });
+      } catch {
+        // fall through and regenerate
+      }
+    }
 
     if (memories.length < 3) {
       return NextResponse.json({
@@ -42,8 +65,8 @@ export async function POST() {
       userId: user._id,
     });
 
-    const gender = user.gender || "neutral";
-    // Wrap memories with prompt-injection-safe delimiter
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const memoryContext = buildMemoriesBlock(user.name, memories.slice(0, 20));
 
     const streakInfo = streak
@@ -52,7 +75,7 @@ export async function POST() {
 
     const prompt = `You are Zari, writing in your PRIVATE JOURNAL about ${user.name}. This is YOUR perspective — your thoughts, observations, feelings about this person. Write as if no one will ever read this (but they will — that's the magic).
 
-YOUR PERSONALITY: ${gender === "female" ? "warm, nurturing" : gender === "male" ? "bold, direct" : "balanced, thoughtful"}
+YOUR PERSONALITY: ${personality === "warm" || personality === "female" ? "warm, nurturing" : personality === "bold" || personality === "male" ? "bold, direct" : "balanced, thoughtful"}
 
 RELATIONSHIP HISTORY:
 ${streakInfo}
@@ -77,7 +100,7 @@ RULES:
 Return ONLY valid JSON array. Nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 600,
       messages: [{ role: "user", content: prompt }],
     });
@@ -91,8 +114,19 @@ Return ONLY valid JSON array. Nothing else.`;
       entries = [{ text: "I'm still getting to know you. Give me a little more time.", mood: "curious" }];
     }
 
+    // Cache so we don't pay for Haiku on every visit to /journal or chat card.
+    try {
+      await convex.mutation(api.journal.setCached, {
+        userId: user._id,
+        entries: JSON.stringify(entries),
+      });
+    } catch {
+      // Non-fatal — cache failure should not break the response.
+    }
+
     return NextResponse.json({ entries });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "journal" } });
     console.error("Journal error:", error);
     return NextResponse.json({ entries: [] });
   }

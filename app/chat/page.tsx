@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useState, useEffect, useRef } from "react";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { OnboardingModal } from "@/components/chat/onboarding-modal";
+import { AgeGate } from "@/components/safety/age-gate";
 import { ZariOrb } from "@/components/chat/zari-orb";
 
 export default function ChatPage() {
@@ -18,13 +19,11 @@ export default function ChatPage() {
   const creatingRef = useRef(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
 
-  // Show error after 15 seconds of loading
   useEffect(() => {
     const timer = setTimeout(() => setLoadTimeout(true), 15000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-create user in Convex if they don't exist yet
   useEffect(() => {
     if (
       isLoaded &&
@@ -51,12 +50,11 @@ export default function ChatPage() {
     }
   }, [isLoaded, clerkUser, convexUser, upsertUser]);
 
-  // Loading — waiting for Clerk or Convex
   if (!isLoaded || !clerkUser || !convexUser) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#06060e]">
+      <div className="h-screen flex items-center justify-center bg-[#0b0b12]">
         <div className="flex flex-col items-center gap-4">
-          <ZariOrb emotion="thinking" gender="neutral" size={64} />
+          <ZariOrb emotion="thinking" size={64} />
           <p className="text-sm text-zari-muted font-mono">
             {loadTimeout ? "Taking longer than usual..." : "Loading Zari..."}
           </p>
@@ -73,8 +71,19 @@ export default function ChatPage() {
     );
   }
 
-  // Onboarding — gender not set means they haven't completed setup
-  if (!convexUser.gender) {
+  // Age gate first — required before onboarding or chat.
+  if (!convexUser.ageConfirmedAt) {
+    return (
+      <AgeGate
+        userId={convexUser._id}
+        onConfirm={() => window.location.reload()}
+      />
+    );
+  }
+
+  // Onboarding — accept either personality (new field) or gender (legacy)
+  const userPersonality = convexUser.personality || convexUser.gender;
+  if (!userPersonality) {
     return (
       <OnboardingModal
         userId={convexUser._id}
@@ -86,12 +95,12 @@ export default function ChatPage() {
     );
   }
 
-  // Chat
   return (
     <ChatInterface
       user={{
         _id: convexUser._id,
         name: convexUser.name,
+        personality: userPersonality,
         gender: convexUser.gender,
         language: convexUser.language,
         voiceEnabled: convexUser.voiceEnabled,

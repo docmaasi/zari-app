@@ -65,7 +65,7 @@ export default function SleepPage() {
   return (
     <div className="min-h-screen bg-[#04040a] font-mono relative overflow-hidden">
       {/* Soft dark gradient — no matrix rain for sleep mode */}
-      <div className="fixed inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#06060e] to-[#04040a] pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0b0b12] to-[#04040a] pointer-events-none" />
 
       <nav className="fixed top-0 w-full z-50 bg-black/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">

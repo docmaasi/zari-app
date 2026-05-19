@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -11,6 +13,17 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("photo", clerkId),
+      LIMITS.photo.max,
+      LIMITS.photo.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -57,14 +70,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const lang = user.language || "en";
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
     const mediaType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 300,
       messages: [
         {
@@ -77,8 +91,8 @@ export async function POST(request: Request) {
             {
               type: "text",
               text: `You are Zari, ${user.name}'s AI companion. ${
-                gender === "female" ? "Warm and nurturing." :
-                gender === "male" ? "Bold and direct." :
+                personality === "warm" || personality === "female" ? "Warm and nurturing." :
+                personality === "bold" || personality === "male" ? "Bold and direct." :
                 "Balanced and thoughtful."
               }
 
@@ -96,6 +110,7 @@ ${lang !== "en" ? `Respond in language code "${lang}".` : ""}`,
 
     return NextResponse.json({ reaction });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "photo-react" } });
     console.error("Photo react error:", error);
     return NextResponse.json(
       { error: "Failed to process photo" },

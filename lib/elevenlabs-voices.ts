@@ -29,20 +29,25 @@ export const elevenLabsVoices: ElevenLabsVoice[] = [
   { id: "iP95p4xoKVk53GoZ742B", label: "Zari — Charming & Real", description: "Down-to-earth, genuine, easy to talk to", gender: "neutral", accent: "American" },
 ];
 
-export function getVoicesForGender(gender: string): ElevenLabsVoice[] {
-  const genderMap: Record<string, string> = {
-    female: "female",
-    male: "male",
-    neutral: "neutral",
-  };
-  return elevenLabsVoices.filter((v) => v.gender === (genderMap[gender] || "neutral"));
+// Map personality values (warm/neutral/bold) and legacy gender values
+// (female/neutral/male) onto the internal voice gender categories.
+function toVoiceCategory(input: string): "female" | "male" | "neutral" {
+  if (input === "warm" || input === "female") return "female";
+  if (input === "bold" || input === "male") return "male";
+  return "neutral";
 }
 
-export function getDefaultVoiceId(gender: string): string {
+export function getVoicesForGender(personalityOrGender: string): ElevenLabsVoice[] {
+  const cat = toVoiceCategory(personalityOrGender);
+  return elevenLabsVoices.filter((v) => v.gender === cat);
+}
+
+export function getDefaultVoiceId(personalityOrGender: string): string {
+  const cat = toVoiceCategory(personalityOrGender);
   const defaults: Record<string, string> = {
     female: "cgSgspJ2msm6clMCkdW9",
     male: "IKne3meq5aSn9XLyUdCD",
     neutral: "EXAVITQu4vr4xnSDxMaL",
   };
-  return defaults[gender] || defaults.neutral;
+  return defaults[cat];
 }

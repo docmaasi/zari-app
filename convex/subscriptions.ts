@@ -21,6 +21,23 @@ export const getSubscription = query({
         plan: "plus_yearly",
         status: "active",
         expiresAt: null,
+        onTrial: false,
+      };
+    }
+
+    // 7-day Plus trial — active as long as trialEndsAt > now AND user hasn't
+    // taken a paid subscription. A paid subscription always wins over the trial.
+    const onTrial =
+      !user.subscriptionStatus
+        ? Boolean(user.trialEndsAt && user.trialEndsAt > Date.now())
+        : false;
+
+    if (onTrial) {
+      return {
+        plan: "plus_trial",
+        status: "active",
+        expiresAt: user.trialEndsAt,
+        onTrial: true,
       };
     }
 
@@ -28,6 +45,7 @@ export const getSubscription = query({
       plan: user.plan || "free",
       status: user.subscriptionStatus || "free",
       expiresAt: user.planExpiresAt,
+      onTrial: false,
     };
   },
 });

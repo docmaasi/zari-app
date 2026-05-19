@@ -15,10 +15,16 @@ import {
 import Link from "next/link";
 import { speakSmooth, stopSmooth } from "@/lib/tts-enhanced";
 import {
+  speakElevenLabsGuest,
+  stopElevenLabsGuest,
+} from "@/lib/tts-elevenlabs-guest";
+import {
   isVoiceInputSupported,
   startListening,
   stopListening,
 } from "@/lib/speech-recognition";
+import { HoneypotField } from "@/components/safety/honeypot-field";
+import { HONEYPOT_FIELD, HONEYPOT_TS_FIELD } from "@/lib/honeypot";
 
 interface Message {
   role: "user" | "assistant";
@@ -34,8 +40,23 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [hasMic] = useState(() => isVoiceInputSupported());
+  // Tracks when the modal opened so server can enforce a minimum fill time.
+  const [hpStartedAt, setHpStartedAt] = useState<number>(() => Date.now());
+  const [hpValue, setHpValue] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // ElevenLabs first, browser TTS only if it fails. Mirrors the main chat's
+  // policy so trial visitors hear the real Zari voice, not synthesized robotic.
+  const speakGuest = async (text: string, onEnd: () => void) => {
+    const ok = await speakElevenLabsGuest(text, onEnd);
+    if (!ok) speakSmooth(text, "en-US", "warm", onEnd);
+  };
+
+  const stopAllSpeech = () => {
+    stopElevenLabsGuest();
+    stopSmooth();
+  };
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -46,6 +67,8 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [{ role: "user", content: "Hi" }],
+            [HONEYPOT_FIELD]: hpValue,
+            [HONEYPOT_TS_FIELD]: hpStartedAt,
           }),
         });
         const data = await res.json();
@@ -55,7 +78,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         setMessages([{ role: "assistant", content: greeting }]);
         if (voiceOn) {
           setIsSpeaking(true);
-          speakSmooth(greeting, "en-US", "female", () => setIsSpeaking(false));
+          speakGuest(greeting, () => setIsSpeaking(false));
         }
       } catch {
         setMessages([
@@ -89,13 +112,17 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
     const updated = [...messages, userMsg];
     setMessages(updated);
     setLoading(true);
-    stopSmooth();
+    stopAllSpeech();
 
     try {
       const res = await fetch("/api/guest-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updated }),
+        body: JSON.stringify({
+          messages: updated,
+          [HONEYPOT_FIELD]: hpValue,
+          [HONEYPOT_TS_FIELD]: hpStartedAt,
+        }),
       });
       const data = await res.json();
 
@@ -106,9 +133,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         ]);
         if (voiceOn) {
           setIsSpeaking(true);
-          speakSmooth(data.reply, "en-US", "female", () =>
-            setIsSpeaking(false)
-          );
+          speakGuest(data.reply, () => setIsSpeaking(false));
         }
       }
       if (data.limitReached) {
@@ -159,8 +184,27 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#06060e] rounded-t-3xl sm:rounded-3xl border border-white/10 w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden"
+        className="bg-[#0b0b12] rounded-t-3xl sm:rounded-3xl border border-white/10 w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden"
       >
+        {/* Honeypot — invisible field for bots to fill */}
+        <HoneypotField onMount={(ts) => setHpStartedAt(ts)} />
+        <input
+          type="text"
+          name="hp_company_url"
+          aria-hidden="true"
+          tabIndex={-1}
+          autoComplete="off"
+          value={hpValue}
+          onChange={(e) => setHpValue(e.target.value)}
+          style={{
+            position: "absolute",
+            left: "-10000px",
+            width: "1px",
+            height: "1px",
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        />
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <div className="flex items-center gap-3">
@@ -190,7 +234,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
             <button
               onClick={() => {
                 setVoiceOn(!voiceOn);
-                if (voiceOn) stopSmooth();
+                if (voiceOn) stopAllSpeech();
               }}
               className={`p-2 rounded-xl transition-colors ${
                 voiceOn
@@ -207,7 +251,7 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
             </button>
             <button
               onClick={() => {
-                stopSmooth();
+                stopAllSpeech();
                 stopListening();
                 onClose();
               }}

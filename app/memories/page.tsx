@@ -52,7 +52,7 @@ export default function MemoriesPage() {
 
   if (!convexUser || memories === undefined) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#06060e]">
+      <div className="h-screen flex items-center justify-center bg-[#0b0b12]">
         <Brain className="w-8 h-8 text-zari-accent animate-pulse" />
       </div>
     );
@@ -81,9 +81,9 @@ export default function MemoriesPage() {
   const categories = Object.keys(categoryConfig);
 
   return (
-    <div className="min-h-screen bg-[#06060e] font-mono relative overflow-hidden">
+    <div className="min-h-screen bg-[#0b0b12] font-mono relative overflow-hidden">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <MatrixRain color="#7c5cfc" opacity={0.025} speed={0.5} />
+        <MatrixRain color="#ff3d8a" opacity={0.025} speed={0.5} />
       </div>
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">

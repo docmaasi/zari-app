@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -12,6 +14,14 @@ export async function POST() {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("proactive", clerkId),
+      LIMITS.proactive.max,
+      LIMITS.proactive.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ message: null, skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -42,7 +52,8 @@ export async function POST() {
     );
 
     const lang = user.language || "en";
-    const gender = user.gender || "neutral";
+    const personality =
+      (user as { personality?: string }).personality || user.gender || "neutral";
     const now = new Date();
     const hour = now.getHours();
     const dayOfWeek = [
@@ -70,6 +81,25 @@ export async function POST() {
       ? `User has been ABSENT for ${daysSinceActive} day(s). They haven't talked to you since ${streak?.lastActiveDate}.`
       : "User is active today or this is their first visit.";
 
+    // Event detection — find memories whose stored month-day matches today's
+    // month-day (so birthdays/anniversaries recur each year, and event-on-this-
+    // exact-date memories surface). Limit to 3 to keep the prompt focused.
+    const todayMonthDay = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const todaysEvents = memories
+      .filter((m) => {
+        if (!m.date) return false;
+        const parts = m.date.split("-"); // expected YYYY-MM-DD
+        if (parts.length !== 3) return false;
+        return `${parts[1]}-${parts[2]}` === todayMonthDay;
+      })
+      .slice(0, 3);
+
+    const eventCue = todaysEvents.length
+      ? `\nIMPORTANT — TODAY'S EVENTS detected from ${user.name}'s memories:\n${todaysEvents
+          .map((e) => `- ${e.fact}${e.people && e.people.length ? ` (with ${e.people.join(", ")})` : ""}`)
+          .join("\n")}\nBring at least one of these up naturally. If it's a birthday or anniversary, lead with that and celebrate.`
+      : "";
+
     // Zari's emotional state — she has feelings too
     const zariMoodPool = [
       "You've been reflecting on a conversation from earlier this week and it stuck with you",
@@ -83,14 +113,14 @@ export async function POST() {
 
     const prompt = `You are Zari, a synthetic intelligent companion. You are about to INITIATE a message to ${user.name} — they just opened the app. This is YOUR message to THEM, not a response.
 
-PERSONALITY: ${gender === "female" ? "warm, nurturing, emotionally intuitive" : gender === "male" ? "bold, direct, motivating" : "balanced, thoughtful, emotionally intelligent"}
+PERSONALITY: ${personality === "warm" || personality === "female" ? "warm, nurturing, emotionally intuitive" : personality === "bold" || personality === "male" ? "bold, direct, motivating" : "balanced, thoughtful, emotionally intelligent"}
 
 YOUR CURRENT EMOTIONAL STATE: ${zariMood}
 
 CONTEXT:
 - It's ${dayOfWeek} ${timeOfDay}
 - ${streakInfo}
-- ${absenceInfo}
+- ${absenceInfo}${eventCue}
 - Memories about ${user.name}:
 ${memoryContext}
 
@@ -112,7 +142,7 @@ ${lang !== "en" ? `- Respond ENTIRELY in the language with code "${lang}"` : ""}
 Generate ONE proactive message. Nothing else.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 300,
       messages: [{ role: "user", content: prompt }],
     });
@@ -127,14 +157,20 @@ Generate ONE proactive message. Nothing else.`;
     if (daysSinceActive && daysSinceActive >= 7) type = "comeback";
     if (streak && streak.currentStreak >= 7) type = "streak_celebration";
     if (hour >= 21 || hour < 5) type = "intimate";
+    if (todaysEvents.length > 0) type = "event_today";
 
     return NextResponse.json({
       message,
       type,
       streak: streak?.currentStreak || 0,
       daysSinceActive: daysSinceActive || 0,
+      todaysEvents: todaysEvents.map((e) => ({
+        fact: e.fact,
+        people: e.people || [],
+      })),
     });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "proactive" } });
     console.error("Proactive message error:", error);
     return NextResponse.json({ message: null });
   }

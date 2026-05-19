@@ -22,7 +22,10 @@ import {
   FileDown,
   Music,
   Image as ImageIcon,
+  LogOut,
+  MoreHorizontal,
 } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 import { getLanguage } from "@/lib/languages";
 import { speakSmooth as speakBrowser, stopSmooth as stopBrowser } from "@/lib/tts-enhanced";
 import { speakElevenLabs, stopElevenLabs } from "@/lib/tts-elevenlabs";
@@ -47,6 +50,9 @@ import { MatrixRain } from "./matrix-rain";
 import { ZariOrb } from "./zari-orb";
 import { PwaInstallButton } from "@/components/pwa-install";
 import { MoodPicker } from "./mood-picker";
+import { CrisisBanner } from "@/components/safety/crisis-banner";
+import type { CrisisLevel } from "@/lib/crisis-detection";
+import { JournalCard } from "./journal-card";
 import {
   isVoiceInputSupported,
   startListening,
@@ -57,6 +63,7 @@ interface ChatInterfaceProps {
   user: {
     _id: Id<"users">;
     name: string;
+    personality?: string;
     gender?: string;
     language?: string;
     voiceEnabled?: boolean;
@@ -113,7 +120,10 @@ function getOrbEmotion(status: Status, gender: string) {
 
 export function ChatInterface({ user }: ChatInterfaceProps) {
   const lang = getLanguage(user.language || "en");
-  const gender = user.gender || "neutral";
+  const personality = user.personality || user.gender || "neutral";
+  // ZariOrb's visual prop is still called `gender` (color logic) — pass the
+  // personality value through.
+  const gender = personality;
   const { isPlusUser } = useSubscription();
   const elevenLabsVoiceId = user.voiceId || getDefaultVoiceId(gender);
 
@@ -153,15 +163,17 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [showMemory, setShowMemory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const { signOut } = useClerk();
   const [selectedConvId, setSelectedConvId] = useState<Id<"conversations"> | null>(null);
   const [isNewChat, setIsNewChat] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [hasMic] = useState(() => isVoiceInputSupported());
   const [themeId] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("zari-theme") || "matrix-purple";
+      return localStorage.getItem("zari-theme") || "matrix-magenta";
     }
-    return "matrix-purple";
+    return "matrix-magenta";
   });
   const [localMessages, setLocalMessages] = useState<
     Array<{ role: string; content: string; id: string }>
@@ -177,6 +189,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
   const [showBreathing, setShowBreathing] = useState(false);
   const [sessionVibe, setSessionVibe] = useState("");
   const [showAmbient, setShowAmbient] = useState(false);
+  const [crisisLevel, setCrisisLevel] = useState<Exclude<CrisisLevel, "none"> | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,6 +379,9 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
               )
             );
           }
+          if (json.crisis && json.crisis !== "none") {
+            setCrisisLevel(json.crisis as Exclude<CrisisLevel, "none">);
+          }
           if (json.done) break;
         }
       }
@@ -453,6 +469,13 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
       {/* Connection status */}
       <ConnectionStatus />
 
+      {/* Crisis hotline banner — appears when crisis detected in user input */}
+      <AnimatePresence>
+        {crisisLevel && (
+          <CrisisBanner level={crisisLevel} onDismiss={() => setCrisisLevel(null)} />
+        )}
+      </AnimatePresence>
+
       {/* Matrix Rain Background */}
       <MatrixRain
         color={theme.matrixColor}
@@ -460,106 +483,253 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         speed={theme.matrixSpeed}
       />
 
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-white/5 bg-black/40 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <ZariOrb emotion={orbEmotion} gender={gender} size={40} />
-          <div>
+      {/* Header — responsive: critical actions stay visible on mobile,
+          less-used items collapse into a "More" overflow menu under 640px */}
+      <header
+        className="relative z-10 flex items-center justify-between px-3 sm:px-4 py-3 border-b border-white/5 bg-black/40 backdrop-blur-xl"
+        role="banner"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <ZariOrb emotion={orbEmotion} gender={gender} size={36} />
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-semibold text-zari-text tracking-wide">
                 Zari
               </h1>
               <StreakBadge userId={user._id} />
             </div>
-            <p className="text-xs text-zari-muted font-light tracking-wider">
+            <p
+              className="text-xs text-zari-muted font-light tracking-wider truncate"
+              aria-live="polite"
+            >
               {statusText}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <nav
+          className="flex items-center gap-1"
+          aria-label="Chat actions"
+        >
+          {/* Voice — always visible, primary control */}
+          <button
+            onClick={() => {
+              if (voiceOn) stopSpeaking();
+              setVoiceOn(!voiceOn);
+            }}
+            className={`p-2 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent ${
+              voiceOn
+                ? "bg-zari-accent/20 text-zari-accent"
+                : "text-zari-muted hover:text-zari-text"
+            }`}
+            aria-label={voiceOn ? "Mute Zari's voice" : "Unmute Zari's voice"}
+            aria-pressed={voiceOn}
+          >
+            {voiceOn ? (
+              <Volume2 className="w-4 h-4" />
+            ) : (
+              <VolumeX className="w-4 h-4" />
+            )}
+          </button>
+
+          {/* Memory — always visible, badge shows count */}
+          <button
+            onClick={() => setShowMemory(true)}
+            className="relative p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+            aria-label={`Memories${memoryCount ? ` (${memoryCount})` : ""}`}
+          >
+            <Brain className="w-4 h-4" />
+            {memoryCount && memoryCount > 0 ? (
+              <span
+                className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-zari-accent text-[10px] text-white flex items-center justify-center font-sans"
+                aria-hidden="true"
+              >
+                {memoryCount > 99 ? "99+" : memoryCount}
+              </span>
+            ) : null}
+          </button>
+
+          {/* History — md+ */}
           <button
             onClick={() => setShowHistory(true)}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
-            title="Conversation history"
+            className="hidden md:inline-flex p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+            aria-label="Conversation history"
           >
             <MessageSquare className="w-4 h-4" />
           </button>
+
+          {/* New conversation — md+ */}
           <button
             onClick={handleNewConversation}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
-            title="New conversation"
+            className="hidden md:inline-flex p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+            aria-label="Start a new conversation"
           >
             <Plus className="w-4 h-4" />
           </button>
+
+          {/* Ambient sounds — md+ */}
           <button
             onClick={() => setShowAmbient(!showAmbient)}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
-            title="Ambient sounds"
+            className="hidden md:inline-flex p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+            aria-label={showAmbient ? "Hide ambient sounds" : "Show ambient sounds"}
+            aria-pressed={showAmbient}
           >
             <Music className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}
-            className={`p-2 rounded-xl transition-colors ${
-              voiceOn ? "bg-zari-accent/20 text-zari-accent" : "text-zari-muted hover:text-zari-text"
-            }`}
-          >
-            {voiceOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => setShowMemory(true)}
-            className="relative p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
-          >
-            <Brain className="w-4 h-4" />
-            {memoryCount && memoryCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-zari-accent text-[10px] text-white flex items-center justify-center font-sans">
-                {memoryCount > 99 ? "99+" : memoryCount}
-              </span>
-            )}
-          </button>
-          <PwaInstallButton variant="header" />
+
+          {/* PWA install — lg+ */}
+          <div className="hidden lg:inline-flex">
+            <PwaInstallButton variant="header" />
+          </div>
+
+          {/* Share — lg+ */}
           <button
             onClick={() => {
               if (navigator.share) {
-                navigator.share({ title: "Zari", text: "Meet Zari, your AI companion.", url: "https://www.zari.help" });
+                navigator.share({
+                  title: "Zari",
+                  text: "Meet Zari, your AI companion.",
+                  url: "https://www.zari.help",
+                });
               } else {
                 navigator.clipboard.writeText("https://www.zari.help");
               }
             }}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            className="hidden lg:inline-flex p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+            aria-label="Share Zari with a friend"
           >
             <Share2 className="w-4 h-4" />
           </button>
+
+          {/* Export PDF — lg+, Plus only */}
           {isPlusUser && allMessages.length > 0 && (
             <button
               onClick={() => exportAsPDF(allMessages, "Zari Chat", user.name)}
-              className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
-              title="Export conversation"
+              className="hidden lg:inline-flex p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+              aria-label="Export conversation as PDF"
             >
               <FileDown className="w-4 h-4" />
             </button>
           )}
+
+          {/* More — mobile only, surfaces the desktop-hidden actions */}
+          <div className="relative md:hidden">
+            <button
+              onClick={() => setShowMoreMenu((s) => !s)}
+              className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+              aria-label="More actions"
+              aria-expanded={showMoreMenu}
+              aria-haspopup="menu"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            {showMoreMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowMoreMenu(false)}
+                  aria-hidden="true"
+                />
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full mt-1 z-40 w-56 bg-zari-surface border border-white/10 rounded-xl shadow-2xl shadow-black/50 p-1"
+                >
+                  <MobileMenuItem
+                    icon={MessageSquare}
+                    label="Conversation history"
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      setShowHistory(true);
+                    }}
+                  />
+                  <MobileMenuItem
+                    icon={Plus}
+                    label="New conversation"
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      handleNewConversation();
+                    }}
+                  />
+                  <MobileMenuItem
+                    icon={Music}
+                    label={showAmbient ? "Hide ambient sounds" : "Ambient sounds"}
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      setShowAmbient(!showAmbient);
+                    }}
+                  />
+                  <MobileMenuItem
+                    icon={Share2}
+                    label="Share Zari"
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      if (navigator.share) {
+                        navigator.share({
+                          title: "Zari",
+                          text: "Meet Zari, your AI companion.",
+                          url: "https://www.zari.help",
+                        });
+                      } else {
+                        navigator.clipboard.writeText("https://www.zari.help");
+                      }
+                    }}
+                  />
+                  {isPlusUser && allMessages.length > 0 && (
+                    <MobileMenuItem
+                      icon={FileDown}
+                      label="Export as PDF"
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        exportAsPDF(allMessages, "Zari Chat", user.name);
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Settings — always visible */}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent"
+            aria-label="Open settings"
           >
             <Settings className="w-4 h-4" />
           </button>
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "w-8 h-8",
-                userButtonPopoverCard: "bg-zari-surface border border-white/10",
-                userButtonPopoverActionButton: "text-zari-text hover:bg-white/5",
-                userButtonPopoverActionButtonText: "text-zari-text",
-                userButtonPopoverFooter: "hidden",
-              },
+
+          {/* Exit — explicit sign-out, always visible. Stops any in-flight
+              speech first so the user gets a clean exit. */}
+          <button
+            onClick={() => {
+              stopSpeaking();
+              signOut({ redirectUrl: "/" });
             }}
-            showName={false}
-            afterSignOutUrl="/"
-          />
-        </div>
+            className="p-2 rounded-xl text-zari-muted hover:text-red-400 hover:bg-red-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            aria-label="Exit Zari (sign out)"
+            title="Exit"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+
+          {/* Clerk avatar — kept for account management entry; hidden on smallest screens to free up room */}
+          <div className="hidden sm:block">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                  userButtonPopoverCard:
+                    "bg-zari-surface border border-white/10",
+                  userButtonPopoverActionButton: "text-zari-text hover:bg-white/5",
+                  userButtonPopoverActionButtonText: "text-zari-text",
+                  userButtonPopoverFooter: "hidden",
+                },
+              }}
+              showName={false}
+              afterSignOutUrl="/"
+            />
+          </div>
+        </nav>
       </header>
 
       {/* Chat area */}
@@ -601,6 +771,9 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
                 </span>
               </motion.div>
             )}
+
+            {/* Zari's Journal — when there's a fresh unseen entry */}
+            {isPlusUser && <JournalCard userId={user._id} />}
 
             {/* Mood Picker */}
             <div className="mb-6 max-w-md">
@@ -758,8 +931,8 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
           <button
             onClick={() => photoInputRef.current?.click()}
             disabled={status === "thinking"}
-            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors"
-            title="Send a photo"
+            className="p-2 rounded-xl text-zari-muted hover:text-zari-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent disabled:opacity-40"
+            aria-label="Attach a photo for Zari to react to"
           >
             <ImageIcon className="w-4 h-4" />
           </button>
@@ -785,12 +958,13 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
                 }
               }}
               disabled={status === "thinking"}
-              className={`p-2 rounded-xl transition-colors ${
+              className={`p-2 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent disabled:opacity-40 ${
                 isListening
                   ? "bg-red-500/20 text-red-400 animate-pulse"
                   : "text-zari-muted hover:text-zari-text"
               }`}
-              title={isListening ? "Stop listening" : "Speak to Zari"}
+              aria-label={isListening ? "Stop listening" : "Speak to Zari"}
+              aria-pressed={isListening}
             >
               {isListening ? (
                 <MicOff className="w-4 h-4" />
@@ -800,19 +974,30 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             </button>
           )}
 
+          <label htmlFor="zari-chat-input" className="sr-only">
+            Type your message to Zari
+          </label>
           <input
             ref={inputRef}
+            id="zari-chat-input"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={hasMic ? "Type or tap mic to speak..." : lang.ui.howFeeling}
+            placeholder={
+              hasMic ? "Type or tap mic to speak..." : lang.ui.howFeeling
+            }
             className="flex-1 bg-transparent text-sm text-zari-text placeholder:text-zari-muted/50 focus:outline-none tracking-wide"
+            autoComplete="off"
+            autoCorrect="on"
+            spellCheck
+            enterKeyHint="send"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || status === "thinking"}
-            className="p-2 rounded-xl bg-zari-accent text-white disabled:opacity-30 hover:bg-zari-accent/90 transition-colors"
+            className="p-2 rounded-xl bg-zari-accent text-white disabled:opacity-30 hover:bg-zari-accent/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0b12]"
+            aria-label="Send message"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -843,7 +1028,7 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
             userId={user._id}
             currentName={user.name}
             currentNamePronunciation={user.namePronunciation}
-            currentGender={gender}
+            currentPersonality={personality}
             currentLanguage={user.language || "en"}
             currentVoiceId={user.voiceId}
             onClose={() => setShowSettings(false)}
@@ -872,5 +1057,25 @@ export function ChatInterface({ user }: ChatInterfaceProps) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+interface MobileMenuItemProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+}
+
+function MobileMenuItem({ icon: Icon, label, onClick }: MobileMenuItemProps) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zari-text hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zari-accent text-left"
+    >
+      <Icon className="w-4 h-4 text-zari-muted" />
+      {label}
+    </button>
   );
 }

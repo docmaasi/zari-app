@@ -7,13 +7,17 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { IdleTimeout } from "@/components/idle-timeout";
 import "./globals.css";
 
+const SITE_TITLE = "Zari — AI That Remembers You";
+const SITE_DESCRIPTION =
+  "Voice-first AI companion that listens, remembers everything that matters, and grows with you. 16 languages. Talk in your headphones.";
+
 export const metadata: Metadata = {
-  title: "Zari — Your AI Companion",
-  description:
-    "An AI companion that thinks, speaks, learns, and remembers. Available in 16 languages.",
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon.png", sizes: "32x32", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
@@ -26,17 +30,23 @@ export const metadata: Metadata = {
     title: "Zari",
   },
   openGraph: {
-    title: "Zari — Your AI Companion",
-    description:
-      "An AI companion that thinks, speaks, learns, and remembers. Available in 16 languages.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     url: "https://www.zari.help",
     siteName: "Zari",
     type: "website",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Zari" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/icon-512.png"],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#7c5cfc",
+  themeColor: "#ff3d8a",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -53,10 +63,10 @@ export default function RootLayout({
       appearance={{
         baseTheme: dark,
         variables: {
-          colorPrimary: "#7c5cfc",
-          colorBackground: "#14142a",
-          colorInputBackground: "#1e1e3a",
-          colorText: "#e8e8f0",
+          colorPrimary: "#ff3d8a",
+          colorBackground: "#16161f",
+          colorInputBackground: "#1f1f2c",
+          colorText: "#f7f7fb",
         },
       }}
       afterSignOutUrl="/"
@@ -65,7 +75,14 @@ export default function RootLayout({
     >
       <html lang="en">
         <head>
-          <link rel="preload" as="image" href="/zari-orb-hd.png" />
+          {/* Preconnects shave ~150-300ms off Google Fonts on first paint */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
+          <link rel="icon" type="image/svg+xml" href="/icon.svg" />
         </head>
         <body>
           <ConvexClientProvider>{children}</ConvexClientProvider>

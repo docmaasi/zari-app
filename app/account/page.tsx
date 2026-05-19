@@ -3,8 +3,6 @@
 import { UserProfile } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { useState } from "react";
-import { useConvex } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Download, Loader2 } from "lucide-react";
 
 /**
@@ -12,19 +10,29 @@ import { Download, Loader2 } from "lucide-react";
  * password, 2FA, sessions, AND account deletion in-app (App-Store
  * compliant). A "Download my data" button above it handles GDPR
  * Article 20 (data portability).
+ *
+ * Data export delegates to /api/account/export — the rate-limited
+ * server route added by the Aurora pack. We just trigger it and let
+ * the browser download what comes back (the route sets the right
+ * Content-Disposition header for us).
  */
 export default function AccountPage(): React.ReactNode {
-  const convex = useConvex();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async (): Promise<void> => {
     if (isExporting) return;
     setIsExporting(true);
     try {
-      const payload = await convex.query(api.userData.exportMyData, {});
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: "application/json",
-      });
+      const res = await fetch("/api/account/export");
+      if (!res.ok) {
+        if (res.status === 429) {
+          alert("Too many requests. Please wait a minute and try again.");
+        } else {
+          alert("Could not export data. Please try again.");
+        }
+        return;
+      }
+      const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

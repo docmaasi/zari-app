@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function SpanishPage() {
   return (
-    <div className="min-h-screen bg-[#06060e] font-mono">
+    <div className="min-h-screen bg-[#0b0b12] font-mono">
       <div className="max-w-3xl mx-auto px-6 py-20 text-center">
         <span className="text-5xl mb-6 block">🇪🇸</span>
         <h1 className="text-4xl md:text-5xl font-bold text-zari-text mb-6 leading-tight">
