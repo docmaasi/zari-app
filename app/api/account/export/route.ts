@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 // Returns a JSON dump of everything Zari has stored about the authenticated
 // user — memories, moods, streaks, voice notes, reminders, journal cache,
@@ -11,6 +13,17 @@ export async function GET() {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("acct-export", clerkId),
+      LIMITS.account.max,
+      LIMITS.account.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -55,6 +68,7 @@ export async function GET() {
       },
     });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "account-export" } });
     console.error("Account export error:", error);
     return NextResponse.json(
       { error: "Failed to export data" },

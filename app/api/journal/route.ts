@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -12,6 +14,14 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("journal", clerkId),
+      LIMITS.journal.max,
+      LIMITS.journal.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ entries: [], skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -116,6 +126,7 @@ Return ONLY valid JSON array. Nothing else.`;
 
     return NextResponse.json({ entries });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "journal" } });
     console.error("Journal error:", error);
     return NextResponse.json({ entries: [] });
   }

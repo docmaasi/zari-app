@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -11,6 +13,17 @@ export async function POST(request: Request) {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("voice", clerkId),
+      LIMITS.voice.max,
+      LIMITS.voice.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -150,6 +163,7 @@ Generate the voice note text only. Nothing else.`;
 
     return NextResponse.json({ noteId, text });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "voice-note" } });
     console.error("Voice note error:", error);
     return NextResponse.json(
       { error: "Failed to generate voice note" },

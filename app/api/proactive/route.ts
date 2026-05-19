@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -12,6 +14,14 @@ export async function POST() {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("proactive", clerkId),
+      LIMITS.proactive.max,
+      LIMITS.proactive.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ message: null, skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -160,6 +170,7 @@ Generate ONE proactive message. Nothing else.`;
       })),
     });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "proactive" } });
     console.error("Proactive message error:", error);
     return NextResponse.json({ message: null });
   }

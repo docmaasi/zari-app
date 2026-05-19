@@ -1,8 +1,10 @@
 import { ConvexHttpClient } from "convex/browser";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import webpush from "web-push";
+import { rateLimit, getClientIp, rlKey, LIMITS } from "@/lib/rate-limit";
 
 // Vercel cron entrypoint: hits this every few hours (configured in vercel.json).
 // Header: `Authorization: Bearer ${CRON_SECRET}`.
@@ -31,11 +33,28 @@ export async function POST(request: Request) {
 }
 
 async function handle(request: Request) {
+  // Cron auth: constant-time-ish comparison via fixed-length string equality
+  // (we already verified both ends are the expected length below).
   const authHeader = request.headers.get("authorization") || "";
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const expected = `Bearer ${cronSecret}`;
+  if (authHeader.length !== expected.length || authHeader !== expected) {
+    // Rate-limit failed-auth attempts by IP so a brute-force on CRON_SECRET
+    // is bounded even if our header check is misconfigured upstream.
+    const ip = getClientIp(request);
+    await rateLimit(rlKey("cron-fail", ip), 5, 60_000);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Cap parallel cron invocations — even legitimate cron should never stampede.
+  const rl = await rateLimit(rlKey("cron", "global"), LIMITS.cron.max, LIMITS.cron.windowMs);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   if (!vapidPublic || !vapidPrivate) {
     return NextResponse.json(
       { error: "VAPID keys not configured" },
@@ -91,6 +110,11 @@ async function handle(request: Request) {
       sent++;
     } catch (err: unknown) {
       const status = (err as { statusCode?: number }).statusCode;
+      if (status !== 404 && status !== 410) {
+        Sentry.captureException(err, {
+          tags: { route: "cron-proactive", phase: "send" },
+        });
+      }
       if (status === 404 || status === 410) {
         try {
           await convex.mutation(api.pushSubscriptions.deleteByEndpoint, {

@@ -19,6 +19,8 @@ import {
   startListening,
   stopListening,
 } from "@/lib/speech-recognition";
+import { HoneypotField } from "@/components/safety/honeypot-field";
+import { HONEYPOT_FIELD, HONEYPOT_TS_FIELD } from "@/lib/honeypot";
 
 interface Message {
   role: "user" | "assistant";
@@ -34,6 +36,9 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [hasMic] = useState(() => isVoiceInputSupported());
+  // Tracks when the modal opened so server can enforce a minimum fill time.
+  const [hpStartedAt, setHpStartedAt] = useState<number>(() => Date.now());
+  const [hpValue, setHpValue] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +51,8 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [{ role: "user", content: "Hi" }],
+            [HONEYPOT_FIELD]: hpValue,
+            [HONEYPOT_TS_FIELD]: hpStartedAt,
           }),
         });
         const data = await res.json();
@@ -95,7 +102,11 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/guest-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updated }),
+        body: JSON.stringify({
+          messages: updated,
+          [HONEYPOT_FIELD]: hpValue,
+          [HONEYPOT_TS_FIELD]: hpStartedAt,
+        }),
       });
       const data = await res.json();
 
@@ -161,6 +172,25 @@ export function TrialChat({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
         className="bg-[#0b0b12] rounded-t-3xl sm:rounded-3xl border border-white/10 w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden"
       >
+        {/* Honeypot — invisible field for bots to fill */}
+        <HoneypotField onMount={(ts) => setHpStartedAt(ts)} />
+        <input
+          type="text"
+          name="hp_company_url"
+          aria-hidden="true"
+          tabIndex={-1}
+          autoComplete="off"
+          value={hpValue}
+          onChange={(e) => setHpValue(e.target.value)}
+          style={{
+            position: "absolute",
+            left: "-10000px",
+            width: "1px",
+            height: "1px",
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        />
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <div className="flex items-center gap-3">

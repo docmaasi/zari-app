@@ -1,10 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { buildMemoriesBlock } from "@/lib/prompt-safety";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
 import { detectCrisis } from "@/lib/crisis-detection";
+import { rateLimit, getClientIp, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -146,6 +148,21 @@ export async function POST(request: Request) {
     const convex = await getAuthenticatedConvex();
     if (!convex) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Per-user burst limit on top of the daily message cap. The daily cap
+    // governs *quantity*; this protects against a runaway client/bot sending
+    // 1000 messages in 30 seconds.
+    const rl = await rateLimit(
+      rlKey("chat", clerkId),
+      LIMITS.chat.max,
+      LIMITS.chat.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "rate_limited", retryAfterMs: rl.resetIn },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
     }
 
     const { message, conversationId, vibe } = await request.json();
@@ -350,7 +367,7 @@ export async function POST(request: Request) {
           );
           controller.close();
         } catch (err) {
-          console.error("Stream error:", err);
+          Sentry.captureException(err, { tags: { route: "chat", phase: "stream" } });
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({ error: "Stream failed" })}\n\n`
@@ -369,6 +386,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "chat" } });
     console.error("Chat API error:", error);
     return NextResponse.json(
       { error: "Failed to generate response" },

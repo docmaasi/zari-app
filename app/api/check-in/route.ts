@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { api } from "@/convex/_generated/api";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAuthenticatedConvex } from "@/lib/convex-server";
+import { rateLimit, rlKey, LIMITS } from "@/lib/rate-limit";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -11,6 +13,14 @@ export async function POST() {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rl = await rateLimit(
+      rlKey("checkin", clerkId),
+      LIMITS.proactive.max,
+      LIMITS.proactive.windowMs
+    );
+    if (!rl.ok) {
+      return NextResponse.json({ greeting: null, skipped: "rate_limited" });
     }
     const convex = await getAuthenticatedConvex();
     if (!convex) {
@@ -82,6 +92,7 @@ ${lang !== "en" ? `- Respond ENTIRELY in the language with code "${lang}"` : ""}
 
     return NextResponse.json({ greeting });
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: "check-in" } });
     console.error("Check-in error:", error);
     return NextResponse.json({ greeting: null });
   }
