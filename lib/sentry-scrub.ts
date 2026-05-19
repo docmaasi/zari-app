@@ -28,11 +28,15 @@ const SENSITIVE_HEADER_NAMES = new Set([
 
 const SENSITIVE_QUERY_KEYS = ["token", "key", "secret", "signature", "code", "session"];
 
-function scrubHeaders(headers: Record<string, unknown> | undefined) {
+function scrubHeaders(
+  headers: { [key: string]: string } | undefined
+): { [key: string]: string } | undefined {
   if (!headers) return undefined;
-  const out: Record<string, unknown> = {};
+  const out: { [key: string]: string } = {};
   for (const [k, v] of Object.entries(headers)) {
-    out[k] = SENSITIVE_HEADER_NAMES.has(k.toLowerCase()) ? "[scrubbed]" : v;
+    out[k] = SENSITIVE_HEADER_NAMES.has(k.toLowerCase())
+      ? "[scrubbed]"
+      : String(v);
   }
   return out;
 }

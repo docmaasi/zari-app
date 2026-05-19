@@ -112,10 +112,11 @@ Generate the voice note text only. Nothing else.`;
       type: type || "checkin",
     });
 
-    // Generate audio via ElevenLabs
+    // Generate audio via ElevenLabs — voice picked from personality (with
+    // legacy gender values mapped through).
     const voiceId = user.voiceId || (
-      gender === "female" ? "cgSgspJ2msm6clMCkdW9" :
-      gender === "male" ? "IKne3meq5aSn9XLyUdCD" :
+      personality === "warm" || personality === "female" ? "cgSgspJ2msm6clMCkdW9" :
+      personality === "bold" || personality === "male" ? "IKne3meq5aSn9XLyUdCD" :
       "EXAVITQu4vr4xnSDxMaL"
     );
 
